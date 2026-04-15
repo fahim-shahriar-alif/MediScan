@@ -41,6 +41,9 @@
   padding: 0;
 }
 
+/* Ensure the HTML hidden attribute always wins over CSS display rules */
+[hidden] { display: none !important; }
+
 html {
   scroll-behavior: smooth;
 }
