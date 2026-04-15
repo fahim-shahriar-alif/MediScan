@@ -113,6 +113,9 @@
   <script src="../config.js"></script>
   <script src="../js/nav.js" type="module"></script>
   <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    requireAuth();
+
     import { loadData, formatDate, MOCK_HEALTH_HISTORY } from '../js/utils.js';
 
     const history = loadData('healthHistory') || MOCK_HEALTH_HISTORY;

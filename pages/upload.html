@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,6 +12,7 @@
   <link rel="stylesheet" href="../css/components.css" />
   <link rel="stylesheet" href="../css/pages/upload.css" />
 </head>
+
 <body>
 
   <header>
@@ -38,14 +40,13 @@
       <div class="upload-grid">
 
         <!-- Left: drop zone -->
-        <div class="upload-zone" id="uploadZone" role="button" tabindex="0"
-             aria-label="Upload medical report files">
+        <div class="upload-zone" id="uploadZone" role="button" tabindex="0" aria-label="Upload medical report files">
           <div class="upload-zone__icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
           </div>
           <p class="upload-zone__title">Drag &amp; Drop your reports here</p>
@@ -58,10 +59,10 @@
         <!-- Right: camera card -->
         <div class="camera-card card">
           <div class="camera-card__icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-              <circle cx="12" cy="13" r="4"/>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
             </svg>
           </div>
           <h3 class="camera-card__title">Switch to Camera</h3>
@@ -75,10 +76,10 @@
       <div class="file-list" id="fileList" hidden>
         <div class="file-list__header">
           <div class="file-list__header-left">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
-              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-              <polyline points="13 2 13 9 20 9"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+              <polyline points="13 2 13 9 20 9" />
             </svg>
             <span id="fileCount">0 files selected</span>
           </div>
@@ -92,18 +93,18 @@
       <!-- Actions -->
       <div class="upload-actions">
         <a href="../index.html" class="btn btn-ghost">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"/>
-            <polyline points="12 19 5 12 12 5"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
           </svg>
           Back to Dashboard
         </a>
         <button class="btn btn-primary btn-lg" id="analyzeBtn" type="button" disabled>
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           <span id="analyzeBtnLabel">Analyze Report</span>
         </button>
@@ -123,7 +124,12 @@
 
   <script src="../config.js"></script>
   <script src="../js/nav.js" type="module"></script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    requireAuth();
+  </script>
   <script src="../js/upload.js" type="module"></script>
 
 </body>
+
 </html>

@@ -89,6 +89,9 @@
   <script src="../config.js"></script>
   <script src="../js/nav.js" type="module"></script>
   <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    requireAuth();
+
     import { renderStepIndicator } from '../js/nav.js';
     import { loadData } from '../js/utils.js';
 

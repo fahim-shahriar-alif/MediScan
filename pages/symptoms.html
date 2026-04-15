@@ -170,6 +170,10 @@
 
   <script src="../config.js"></script>
   <script src="../js/nav.js" type="module"></script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    requireAuth();
+  </script>
   <script src="../js/symptoms.js" type="module"></script>
 
 </body>

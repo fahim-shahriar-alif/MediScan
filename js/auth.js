@@ -182,9 +182,14 @@ export function _redirectAfterLogin() {
 
 export function requireAuth() {
   if (!isLoggedIn()) {
-    const inPages = window.location.pathname.includes('/pages/');
+    // Save where the user was trying to go
     sessionStorage.setItem('mediscan_return_to', window.location.href);
-    window.location.href = (inPages ? '' : 'pages/') + 'login.html';
+
+    // Show a full-page overlay so there's no blank flash during redirect
+    document.documentElement.style.visibility = 'hidden';
+
+    const inPages = window.location.pathname.includes('/pages/');
+    window.location.replace((inPages ? '' : 'pages/') + 'login.html');
   }
 }
 

@@ -73,6 +73,9 @@
   <script src="../config.js"></script>
   <script src="../js/nav.js" type="module"></script>
   <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    requireAuth();
+
     import { renderStepIndicator } from '../js/nav.js';
     import { loadData, saveData } from '../js/utils.js';
     import { generateSymptomResult } from '../js/ai.js';

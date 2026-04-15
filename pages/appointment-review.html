@@ -107,6 +107,9 @@
   <script src="../config.js"></script>
   <script src="../js/nav.js" type="module"></script>
   <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    requireAuth();
+
     import { loadData, saveData, formatDate, generateConfirmationNumber } from '../js/utils.js';
 
     const appt = loadData('appointmentDetails');

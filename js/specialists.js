@@ -4,6 +4,7 @@
 
 import { renderStepIndicator } from './nav.js';
 import { loadData, saveData, MOCK_SPECIALISTS } from './utils.js';
+import { isLoggedIn } from './auth.js';
 
 // ─── Render step indicator ─────────────────────────────────────────────────
 renderStepIndicator('#step-indicator', ['Upload', 'Analysis', 'Navigator'], 3);
@@ -72,12 +73,87 @@ grid.innerHTML = specialists.map(doc => `
   </div>
 `).join('');
 
+// ─── Auth-aware booking ────────────────────────────────────────────────────
+function bookDoctor(doc) {
+  if (!isLoggedIn()) {
+    showLoginPrompt(doc);
+    return;
+  }
+  saveData('selectedDoctor', doc);
+  window.location.href = 'schedule.html';
+}
+
+function showLoginPrompt(doc) {
+  const existing = document.getElementById('loginPromptModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'loginPromptModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:2rem;max-width:400px;width:100%;
+                box-shadow:0 20px 40px rgba(0,0,0,0.18);text-align:center;position:relative">
+
+      <!-- Lock icon -->
+      <div style="width:56px;height:56px;background:#DBEAFE;border-radius:50%;
+                  display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+          fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+
+      <h3 style="font-size:1.125rem;font-weight:700;color:#111827;margin-bottom:0.375rem">
+        Sign in to Book
+      </h3>
+      <p style="font-size:0.875rem;color:#6B7280;margin-bottom:0.25rem">
+        You need an account to book an appointment with
+      </p>
+      <p style="font-size:0.9375rem;font-weight:700;color:#2563EB;margin-bottom:1.5rem">
+        ${doc.name}
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:0.625rem">
+        <a href="login.html" id="loginPromptSignIn"
+           style="display:flex;align-items:center;justify-content:center;gap:0.5rem;
+                  padding:0.75rem;background:#2563EB;color:#fff;border-radius:10px;
+                  font-weight:600;font-size:0.9375rem;text-decoration:none;transition:background 0.2s">
+          Sign In
+        </a>
+        <a href="signup.html" id="loginPromptSignUp"
+           style="display:flex;align-items:center;justify-content:center;gap:0.5rem;
+                  padding:0.75rem;background:transparent;color:#2563EB;border:1.5px solid #2563EB;
+                  border-radius:10px;font-weight:600;font-size:0.9375rem;text-decoration:none;transition:all 0.2s">
+          Create Free Account
+        </a>
+        <button id="loginPromptCancel"
+           style="padding:0.625rem;background:none;border:none;color:#6B7280;
+                  font-size:0.875rem;cursor:pointer;font-family:inherit">
+          Maybe later
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+
+  // Save the doctor so after login we can go straight to schedule
+  saveData('selectedDoctor', doc);
+  // Save return URL so login redirects back to specialists
+  sessionStorage.setItem('mediscan_return_to', window.location.href);
+
+  // Update login/signup links to carry the return URL
+  modal.querySelector('#loginPromptSignIn').href  = `login.html`;
+  modal.querySelector('#loginPromptSignUp').href  = `signup.html`;
+
+  modal.querySelector('#loginPromptCancel').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
 // ─── Book Appointment handlers ─────────────────────────────────────────────
 document.querySelectorAll('.book-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    const doctor = JSON.parse(btn.dataset.doctor);
-    saveData('selectedDoctor', doctor);
-    window.location.href = 'schedule.html';
+    bookDoctor(JSON.parse(btn.dataset.doctor));
   });
 });
 
@@ -124,8 +200,8 @@ function showDetailsModal(doc) {
   modal.querySelector('#closeModal2').addEventListener('click', () => modal.remove());
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
   modal.querySelector('.modal-book-btn').addEventListener('click', () => {
-    saveData('selectedDoctor', doc);
-    window.location.href = 'schedule.html';
+    modal.remove();
+    bookDoctor(doc);
   });
 }
 
