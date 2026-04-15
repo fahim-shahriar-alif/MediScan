@@ -1,132 +1,191 @@
 /**
- * schedule.js — Calendar and time slot picker for MediScan.
+ * schedule.js — Week-strip calendar + time slot picker for MediScan.
  */
 
-import { loadData, saveData, formatTime } from './utils.js';
+import { renderStepIndicator } from './nav.js';
+import { loadData, saveData } from './utils.js';
 
-// ─── Load doctor data ──────────────────────────────────────────────────────
+// ─── Step indicator ────────────────────────────────────────────────────────
+renderStepIndicator('#step-indicator', ['Upload', 'Analysis', 'Navigator'], 3);
+
+// ─── Load doctor ───────────────────────────────────────────────────────────
 const doctor = loadData('selectedDoctor');
+
 if (doctor) {
-  const initials = doctor.name.split(' ').map(w => w[0]).join('').slice(0, 2);
-  document.getElementById('docAvatar').textContent = initials;
-  document.getElementById('docName').textContent = doctor.name;
+  document.getElementById('docName').textContent      = doctor.name;
   document.getElementById('docSpecialty').textContent = doctor.specialty;
+  document.getElementById('docAddress').textContent   = doctor.address;
+  document.getElementById('docDistance').textContent  = doctor.distance + ' away';
+  document.getElementById('docPhone').textContent     = doctor.phone;
+  document.getElementById('mapAddress').textContent   = doctor.address;
+  document.getElementById('mapDistance').textContent  = doctor.distance + ' away';
+  document.getElementById('mapPhone').textContent     = doctor.phone;
+
+  // Star rating
+  const stars = '★'.repeat(Math.floor(doctor.rating)) + (doctor.rating % 1 >= 0.5 ? '½' : '');
   document.getElementById('docRating').innerHTML =
-    `<span style="color:var(--color-warning)">★</span> ${doctor.rating} (${doctor.reviews} reviews)`;
-  document.getElementById('clinicAddress').textContent = doctor.address;
+    `<span class="sched-stars">${stars}</span>
+     <span class="sched-rating-val">${doctor.rating}</span>
+     <span class="sched-rating-count">(${doctor.reviews} reviews)</span>`;
 } else {
-  // No doctor selected — show fallback and redirect hint
-  document.getElementById('docName').textContent = 'No doctor selected';
+  document.getElementById('docName').textContent      = 'No doctor selected';
   document.getElementById('docSpecialty').textContent = 'Please go back and select a specialist';
-  document.getElementById('reviewBtn').disabled = true;
+  document.getElementById('reviewBtn').disabled       = true;
 }
 
 // ─── State ─────────────────────────────────────────────────────────────────
-let currentMonth = new Date().getMonth();
-let currentYear = new Date().getFullYear();
-let selectedDate = null;
-let selectedTime = null;
+const today       = new Date(); today.setHours(0,0,0,0);
+let   weekStart   = new Date(today);                    // Monday of current week
+let   selectedDate = null;
+let   selectedSlot = null;   // { hour, minute, label }
 
-const reviewBtn = document.getElementById('reviewBtn');
+// Align weekStart to Monday
+const dow = weekStart.getDay();
+weekStart.setDate(weekStart.getDate() - (dow === 0 ? 6 : dow - 1));
 
-// ─── Calendar rendering ────────────────────────────────────────────────────
-function renderCalendar() {
-  const monthNames = ['January','February','March','April','May','June',
-                      'July','August','September','October','November','December'];
-  document.getElementById('calendarMonth').textContent =
-    `${monthNames[currentMonth]} ${currentYear}`;
+// Simulated booked slots (hour:minute strings)
+const BOOKED = new Set(['8:30','10:00','13:00','16:00','18:00','15:30']);
 
-  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+// ─── Helpers ───────────────────────────────────────────────────────────────
+const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MON_NAMES  = ['January','February','March','April','May','June',
+                    'July','August','September','October','November','December'];
 
-  let html = '';
-  // Empty cells for days before first day
-  for (let i = 0; i < firstDay; i++) {
-    html += '<div class="cal-day cal-day--empty"></div>';
-  }
-  // Day cells
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(currentYear, currentMonth, d);
-    date.setHours(0, 0, 0, 0);
-    const isPast = date < today;
-    const isToday = date.getTime() === today.getTime();
-    const isSelected = selectedDate &&
-      selectedDate.getDate() === d &&
-      selectedDate.getMonth() === currentMonth &&
-      selectedDate.getFullYear() === currentYear;
-
-    let classes = 'cal-day';
-    if (isPast) classes += ' cal-day--past';
-    if (isToday) classes += ' cal-day--today';
-    if (isSelected) classes += ' cal-day--selected';
-
-    html += `<div class="${classes}" data-day="${d}">${d}</div>`;
-  }
-
-  document.getElementById('calendarDays').innerHTML = html;
-
-  // Day click handlers
-  document.querySelectorAll('.cal-day:not(.cal-day--empty):not(.cal-day--past)')
-    .forEach(el => {
-      el.addEventListener('click', () => {
-        selectedDate = new Date(currentYear, currentMonth, parseInt(el.dataset.day));
-        renderCalendar();
-        updateReviewBtn();
-      });
-    });
+function fmtTime(h, m) {
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hh   = h % 12 || 12;
+  return `${hh}:${String(m).padStart(2,'0')} ${ampm}`;
 }
 
-document.getElementById('prevMonth').addEventListener('click', () => {
-  currentMonth--;
-  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-  renderCalendar();
+function fmtShortDate(d) {
+  return d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+}
+
+// ─── Week-strip calendar ───────────────────────────────────────────────────
+function renderWeek() {
+  // Month label — show month(s) covered by this week
+  const endOfWeek = new Date(weekStart);
+  endOfWeek.setDate(endOfWeek.getDate() + 6);
+  const monthLabel = weekStart.getMonth() === endOfWeek.getMonth()
+    ? `${MON_NAMES[weekStart.getMonth()]} ${weekStart.getFullYear()}`
+    : `${MON_NAMES[weekStart.getMonth()]} / ${MON_NAMES[endOfWeek.getMonth()]} ${weekStart.getFullYear()}`;
+  document.getElementById('weekMonth').textContent = monthLabel;
+
+  const container = document.getElementById('weekDays');
+  container.innerHTML = '';
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + i);
+    d.setHours(0,0,0,0);
+
+    const isPast     = d < today;
+    const isToday    = d.getTime() === today.getTime();
+    const isSelected = selectedDate && d.getTime() === selectedDate.getTime();
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'week-day'
+      + (isPast     ? ' week-day--past'     : '')
+      + (isToday    ? ' week-day--today'    : '')
+      + (isSelected ? ' week-day--selected' : '');
+    btn.disabled = isPast;
+    btn.innerHTML = `
+      <span class="week-day__name">${DAY_NAMES[d.getDay()]}</span>
+      <span class="week-day__num">${d.getDate()}</span>
+      ${isToday ? '<span class="week-day__today-dot">Today</span>' : ''}`;
+
+    btn.addEventListener('click', () => {
+      selectedDate = new Date(d);
+      renderWeek();
+      updateReadyCard();
+      updateConfirmBtn();
+    });
+
+    container.appendChild(btn);
+  }
+}
+
+document.getElementById('prevWeek').addEventListener('click', () => {
+  weekStart.setDate(weekStart.getDate() - 7);
+  renderWeek();
+});
+document.getElementById('nextWeek').addEventListener('click', () => {
+  weekStart.setDate(weekStart.getDate() + 7);
+  renderWeek();
 });
 
-document.getElementById('nextMonth').addEventListener('click', () => {
-  currentMonth++;
-  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-  renderCalendar();
-});
+renderWeek();
 
-renderCalendar();
+// ─── Time slots ────────────────────────────────────────────────────────────
+const SLOTS = {
+  morning:   [{h:8,m:0},{h:8,m:30},{h:9,m:0},{h:9,m:30},{h:10,m:0},{h:10,m:30},
+              {h:11,m:0},{h:11,m:30}],
+  afternoon: [{h:12,m:0},{h:12,m:30},{h:13,m:0},{h:13,m:30},{h:14,m:0},{h:14,m:30},
+              {h:15,m:0},{h:15,m:30},{h:16,m:0}],
+  evening:   [{h:16,m:30},{h:17,m:0},{h:17,m:30},{h:18,m:0},{h:18,m:30},
+              {h:19,m:0},{h:19,m:30},{h:20,m:0},{h:20,m:30}],
+};
 
-// ─── Time slots rendering ──────────────────────────────────────────────────
-function renderTimeSlots(containerId, hours) {
+function renderSlots(containerId, slots) {
   const container = document.getElementById(containerId);
-  container.innerHTML = hours.map(h => {
-    const time = formatTime(h, 0);
-    return `<button class="time-slot" type="button" data-hour="${h}">${time}</button>`;
+  container.innerHTML = slots.map(({ h, m }) => {
+    const key    = `${h}:${m}`;
+    const label  = fmtTime(h, m);
+    const booked = BOOKED.has(key);
+    const isSel  = selectedSlot && selectedSlot.hour === h && selectedSlot.minute === m;
+
+    return `<button class="time-slot${booked ? ' time-slot--booked' : ''}${isSel ? ' time-slot--selected' : ''}"
+              type="button" data-h="${h}" data-m="${m}"
+              ${booked ? 'disabled aria-label="' + label + ' — unavailable"' : ''}>
+              ${label}
+            </button>`;
   }).join('');
 
-  container.querySelectorAll('.time-slot').forEach(btn => {
+  container.querySelectorAll('.time-slot:not(.time-slot--booked)').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.time-slot').forEach(b => b.classList.remove('time-slot--selected'));
-      btn.classList.add('time-slot--selected');
-      selectedTime = parseInt(btn.dataset.hour);
-      updateReviewBtn();
+      selectedSlot = { hour: +btn.dataset.h, minute: +btn.dataset.m,
+                       label: fmtTime(+btn.dataset.h, +btn.dataset.m) };
+      // Re-render all slot groups to update selection
+      renderSlots('morningSlots',   SLOTS.morning);
+      renderSlots('afternoonSlots', SLOTS.afternoon);
+      renderSlots('eveningSlots',   SLOTS.evening);
+      updateReadyCard();
+      updateConfirmBtn();
     });
   });
 }
 
-renderTimeSlots('morningSlots', [8, 9, 10, 11]);
-renderTimeSlots('afternoonSlots', [13, 14, 15, 16]);
-renderTimeSlots('eveningSlots', [17, 18, 19]);
+renderSlots('morningSlots',   SLOTS.morning);
+renderSlots('afternoonSlots', SLOTS.afternoon);
+renderSlots('eveningSlots',   SLOTS.evening);
 
-// ─── Update review button ──────────────────────────────────────────────────
-function updateReviewBtn() {
-  reviewBtn.disabled = !(selectedDate && selectedTime !== null);
+// ─── Ready to Book card ────────────────────────────────────────────────────
+function updateReadyCard() {
+  const card = document.getElementById('readyCard');
+  if (selectedDate && selectedSlot) {
+    card.hidden = false;
+    document.getElementById('readyDate').textContent = fmtShortDate(selectedDate);
+    document.getElementById('readyTime').textContent = selectedSlot.label;
+  } else {
+    card.hidden = true;
+  }
 }
 
-// ─── Review button → save & navigate ───────────────────────────────────────
+// ─── Confirm button ────────────────────────────────────────────────────────
+const reviewBtn = document.getElementById('reviewBtn');
+
+function updateConfirmBtn() {
+  reviewBtn.disabled = !(selectedDate && selectedSlot);
+}
+
 reviewBtn.addEventListener('click', () => {
-  if (!selectedDate || selectedTime === null) return;
+  if (!selectedDate || !selectedSlot) return;
   saveData('appointmentDetails', {
-    doctor: doctor || { name: 'Doctor', specialty: 'Specialist', address: '—', phone: '—' },
-    date: selectedDate.toISOString(),
-    time: selectedTime,
-    timeLabel: formatTime(selectedTime, 0),
+    doctor: doctor || { name: 'Doctor', specialty: 'Specialist', address: '—', phone: '—', distance: '—' },
+    date:      selectedDate.toISOString(),
+    time:      selectedSlot.hour,
+    timeLabel: selectedSlot.label,
   });
   window.location.href = 'appointment-review.html';
 });
