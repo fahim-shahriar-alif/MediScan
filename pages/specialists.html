@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recommended Specialists — MediScan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/specialists.css" />
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar__inner">
+        <a href="../index.html" class="navbar__logo" aria-label="MediScan home">
+          <img src="../assets/logo.svg" alt="MediScan" class="navbar__logo-img" />
+        </a>
+        <ul class="navbar__nav" role="list">
+          <li><a href="health-history.html">Health History</a></li>
+          <li><a href="specialists.html">Find Specialists</a></li>
+          <li><a href="symptoms.html">AI Health Check</a></li>
+        </ul>
+        <div id="navbar__user-slot"></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="specialists-page">
+    <div id="step-indicator" class="container"></div>
+
+    <div class="container">
+
+      <!-- Recommendation Banner -->
+      <div class="alert alert-warning specialist-banner" id="recBanner">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4l3 3" />
+        </svg>
+        <div>
+          <strong>AI Recommendation:</strong>
+          <span id="recText">Based on your analysis, we recommend consulting an Endocrinologist.</span>
+        </div>
+      </div>
+
+      <!-- Specialist Cards Grid -->
+      <div class="specialist-grid" id="specialistGrid">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Need Help Section -->
+      <div class="help-section card">
+        <div class="help-section__content">
+          <h3>Need Help Choosing?</h3>
+          <p>Our care coordination team can help you find the right specialist and book your appointment.</p>
+        </div>
+        <button class="btn btn-outline">Contact Care Team</button>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script src="../js/nav.js" type="module"></script>
+  <script src="../js/specialists.js" type="module"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Review Appointment — MediScan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/appointment.css" />
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar__inner">
+        <a href="../index.html" class="navbar__logo" aria-label="MediScan home">
+          <img src="../assets/logo.svg" alt="MediScan" class="navbar__logo-img" />
+        </a>
+        <ul class="navbar__nav" role="list">
+          <li><a href="health-history.html">Health History</a></li>
+          <li><a href="specialists.html">Find Specialists</a></li>
+          <li><a href="symptoms.html">AI Health Check</a></li>
+        </ul>
+        <div id="navbar__user-slot"></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="review-page">
+    <div class="container">
+      <div class="review-card card" id="reviewCard">
+        <h2 class="review-card__title">Review Your Appointment</h2>
+        <p class="review-card__subtitle">Please confirm the details below</p>
+
+        <div class="review-doctor" id="reviewDoctorSection">
+          <div class="review-doctor__avatar" id="revDocAvatar">—</div>
+          <div class="review-doctor__info">
+            <h3 class="review-doctor__name" id="revDocName">—</h3>
+            <p class="review-doctor__specialty" id="revDocSpecialty">—</p>
+            <span class="badge badge-normal">✓ Verified Provider</span>
+          </div>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="review-details">
+          <div class="review-details__row">
+            <div class="review-details__icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+            </div>
+            <div>
+              <p class="review-details__label">Location</p>
+              <p class="review-details__value" id="revLocation">—</p>
+              <a href="#" class="review-details__link" id="directionsLink">View Directions</a>
+            </div>
+          </div>
+          <div class="review-details__row">
+            <div class="review-details__icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+            <div>
+              <p class="review-details__label">Date & Time</p>
+              <p class="review-details__value" id="revDateTime">—</p>
+            </div>
+          </div>
+          <div class="review-details__row">
+            <div class="review-details__icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+              </svg>
+            </div>
+            <div>
+              <p class="review-details__label">Arrival</p>
+              <p class="review-details__value">Please arrive 15 minutes before your appointment</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-actions">
+          <a href="schedule.html" class="btn btn-ghost">Edit Appointment Details</a>
+          <button class="btn btn-primary btn-lg" id="confirmBtn" type="button">
+            Confirm & Book Appointment
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script src="../js/nav.js" type="module"></script>
+  <script type="module">
+    import { loadData, saveData, formatDate, generateConfirmationNumber } from '../js/utils.js';
+
+    const appt = loadData('appointmentDetails');
+    if (appt) {
+      const doc = appt.doctor;
+      const initials = doc.name.split(' ').map(w => w[0]).join('').slice(0, 2);
+      document.getElementById('revDocAvatar').textContent = initials;
+      document.getElementById('revDocName').textContent = doc.name;
+      document.getElementById('revDocSpecialty').textContent = doc.specialty;
+      document.getElementById('revLocation').textContent = doc.address;
+      document.getElementById('revDateTime').textContent =
+        `${formatDate(appt.date)} at ${appt.timeLabel}`;
+
+      // Wire up directions link
+      const directionsLink = document.getElementById('directionsLink');
+      if (directionsLink && doc.address) {
+        directionsLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(doc.address)}`;
+        directionsLink.target = '_blank';
+        directionsLink.rel = 'noopener noreferrer';
+      }
+    }
+
+    document.getElementById('confirmBtn').addEventListener('click', () => {
+      const confirmation = generateConfirmationNumber();
+      saveData('confirmationNumber', confirmation);
+      window.location.href = 'appointment-confirmed.html';
+    });
+  </script>
+
+</body>
+
+</html>

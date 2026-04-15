@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirm Symptoms — MediScan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/symptom-results.css" />
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar__inner">
+        <a href="../index.html" class="navbar__logo" aria-label="MediScan home">
+          <img src="../assets/logo.svg" alt="MediScan" class="navbar__logo-img" />
+        </a>
+        <ul class="navbar__nav" role="list">
+          <li><a href="health-history.html">Health History</a></li>
+          <li><a href="specialists.html">Find Specialists</a></li>
+          <li><a href="symptoms.html">AI Health Check</a></li>
+        </ul>
+        <div id="navbar__user-slot"></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="confirm-page">
+    <div id="step-indicator" class="container"></div>
+
+    <div class="container">
+      <div class="confirm-card card">
+        <h2 class="confirm-card__title">Confirm Your Symptoms</h2>
+        <p class="confirm-card__subtitle">Review the information below before we analyze your symptoms.</p>
+
+        <div class="confirm-summary" id="confirmSummary">
+          <!-- Rendered by JS -->
+        </div>
+
+        <div class="confirm-disclaimer alert alert-warning">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <div>
+            <strong>Disclaimer:</strong> This AI analysis is for informational purposes only and does not constitute
+            medical advice. Always consult a healthcare professional for proper diagnosis.
+          </div>
+        </div>
+
+        <div class="confirm-actions">
+          <a href="symptoms.html" class="btn btn-ghost">Edit Symptoms</a>
+          <button class="btn btn-primary btn-lg" id="proceedBtn" type="button">
+            Proceed with Analysis
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script src="../js/nav.js" type="module"></script>
+  <script type="module">
+    import { renderStepIndicator } from '../js/nav.js';
+    import { loadData, saveData } from '../js/utils.js';
+    import { generateSymptomResult } from '../js/ai.js';
+
+    renderStepIndicator('#step-indicator', ['Select Symptoms', 'Review', 'Results'], 2);
+
+    const data = loadData('symptomData');
+    const container = document.getElementById('confirmSummary');
+
+    if (!data) {
+      container.innerHTML = '<p style="color:var(--color-muted);text-align:center;padding:1rem">No symptom data found. <a href="symptoms.html">Go back to symptom checker</a>.</p>';
+      document.getElementById('proceedBtn').disabled = true;
+    } else {
+      const durationMap = {
+        'today': 'Started today',
+        'few-days': 'A few days',
+        'one-week': 'About a week',
+        'two-weeks': '2+ weeks',
+        'one-month': '1+ month',
+      };
+
+      let html = '';
+
+      if (data.areaNames?.length) {
+        html += `<div class="confirm-summary__row">
+          <span class="confirm-summary__label">Affected Areas</span>
+          <span class="confirm-summary__value">${data.areaNames.join(', ')}</span>
+        </div>`;
+      }
+
+      if (data.symptoms?.length) {
+        html += `<div class="confirm-summary__row">
+          <span class="confirm-summary__label">Symptoms</span>
+          <span class="confirm-summary__value">${data.symptoms.join(', ')}</span>
+        </div>`;
+      }
+
+      if (data.otherSymptoms) {
+        html += `<div class="confirm-summary__row">
+          <span class="confirm-summary__label">Other</span>
+          <span class="confirm-summary__value">${data.otherSymptoms}</span>
+        </div>`;
+      }
+
+      html += `<div class="confirm-summary__row">
+        <span class="confirm-summary__label">Duration</span>
+        <span class="confirm-summary__value">${durationMap[data.duration] || 'Not specified'}</span>
+      </div>`;
+
+      html += `<div class="confirm-summary__row">
+        <span class="confirm-summary__label">Pain Level</span>
+        <span class="confirm-summary__value">${data.painLevel} / 10</span>
+      </div>`;
+
+      if (data.existingConditions) {
+        html += `<div class="confirm-summary__row">
+          <span class="confirm-summary__label">Pre-existing</span>
+          <span class="confirm-summary__value">${data.existingConditions}</span>
+        </div>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    document.getElementById('proceedBtn').addEventListener('click', function () {
+      if (!data) {
+        window.location.href = 'symptoms.html';
+        return;
+      }
+      this.disabled = true;
+      this.innerHTML = `<span class="spinner"></span> Analyzing…`;
+
+      // Show loading overlay
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center';
+      overlay.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:2.5rem 3rem;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,0.12)">
+          <div style="width:48px;height:48px;border:4px solid #E5E7EB;border-top-color:#2563EB;border-radius:50%;margin:0 auto 1.25rem;animation:spin 0.8s linear infinite"></div>
+          <p style="font-size:1rem;font-weight:600;color:#111827;margin-bottom:0.25rem">Analyzing your symptoms…</p>
+          <p style="font-size:0.8125rem;color:#6B7280">This may take a moment</p>
+        </div>
+        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+      `;
+      document.body.appendChild(overlay);
+
+      const result = generateSymptomResult(data);
+      saveData('symptomResult', result);
+      setTimeout(() => {
+        window.location.href = 'symptom-results.html';
+      }, 1200);
+    });
+  </script>
+
+</body>
+
+</html>

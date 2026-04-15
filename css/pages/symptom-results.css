@@ -1,0 +1,246 @@
+/* =============================================
+   SYMPTOM RESULTS & CONFIRM PAGES
+   ============================================= */
+
+/* Shared layout for confirm & results */
+.confirm-page,
+.symptom-results-page {
+  padding-bottom: 3rem;
+}
+
+.confirm-card {
+  max-width: 640px;
+  margin: 1.5rem auto 0;
+  padding: 2rem;
+}
+
+.confirm-card__title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.confirm-card__subtitle {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* ─── Confirm Summary ────────────────────────────────────────────────────── */
+.confirm-summary {
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.confirm-summary__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+.confirm-summary__row:not(:last-child) {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.confirm-summary__label {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.confirm-summary__value {
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  font-weight: 600;
+  text-align: right;
+  max-width: 320px;
+}
+
+.confirm-disclaimer {
+  margin-bottom: 1.5rem;
+}
+
+.confirm-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ─── Spinner ────────────────────────────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Results Layout ─────────────────────────────────────────────────────── */
+.results-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+/* ─── Urgency Banner ─────────────────────────────────────────────────────── */
+.urgency-banner {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.urgency-banner--low    { background: #DCFCE7; color: #166534; border-left: 4px solid var(--color-success); }
+.urgency-banner--medium { background: #FEF9C3; color: #92400E; border-left: 4px solid var(--color-warning); }
+.urgency-banner--high   { background: #FEE2E2; color: #991B1B; border-left: 4px solid var(--color-danger); }
+
+/* ─── Condition Cards ────────────────────────────────────────────────────── */
+.condition-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.condition-card__match {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  margin-bottom: 0.75rem;
+}
+
+.condition-card__match--high {
+  background: #FEF9C3;
+  color: var(--color-warning);
+}
+
+.condition-card__match--medium {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.condition-card__match--low {
+  background: #ECFDF5;
+  color: var(--color-success);
+}
+
+.condition-card__name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.375rem;
+}
+
+.condition-card__desc {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.condition-card__recommendations {
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  padding: 0.875rem 1rem;
+}
+
+.condition-card__recommendations h4 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  margin-bottom: 0.5rem;
+}
+
+.condition-card__recommendations ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.condition-card__recommendations li {
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  padding-left: 1.25rem;
+  position: relative;
+}
+
+.condition-card__recommendations li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--color-primary);
+}
+
+/* ─── Results Sidebar ────────────────────────────────────────────────────── */
+.results-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.results-sidebar .card {
+  padding: 1.25rem;
+}
+
+.results-sidebar__title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text);
+  margin-bottom: 0.75rem;
+}
+
+.results-sidebar__text {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.results-sidebar__btn {
+  margin-top: 0.75rem;
+  width: 100%;
+  justify-content: center;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .results-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .confirm-actions {
+    flex-direction: column;
+  }
+
+  .confirm-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

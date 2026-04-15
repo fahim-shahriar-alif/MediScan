@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Analysis Results — MediScan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/analysis.css" />
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar__inner">
+        <a href="../index.html" class="navbar__logo" aria-label="MediScan home">
+          <img src="../assets/logo.svg" alt="MediScan" class="navbar__logo-img" />
+        </a>
+        <ul class="navbar__nav" role="list">
+          <li><a href="health-history.html">Health History</a></li>
+          <li><a href="specialists.html">Find Specialists</a></li>
+          <li><a href="symptoms.html">AI Health Check</a></li>
+        </ul>
+        <div id="navbar__user-slot"></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="analysis-page">
+    <div id="step-indicator" class="container"></div>
+
+    <div class="container">
+      <div class="analysis-layout">
+
+        <!-- Main Content -->
+        <div class="analysis-main">
+
+          <!-- AI Health Insight Card -->
+          <div class="card-dark analysis-insight" id="insightCard">
+            <div class="analysis-insight__header">
+              <div class="analysis-insight__icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4" />
+                  <path d="M12 8h.01" />
+                </svg>
+              </div>
+              <div>
+                <h2 class="analysis-insight__title">AI Health Insight</h2>
+                <span class="badge" id="statusBadge">—</span>
+              </div>
+            </div>
+            <p class="analysis-insight__summary" id="summaryText">Loading analysis…</p>
+            <div class="analysis-insight__next">
+              <h4>Next Steps</h4>
+              <p id="nextStepsText">—</p>
+            </div>
+          </div>
+
+          <!-- Key Metrics Grid -->
+          <section class="analysis-metrics">
+            <h3 class="analysis-section-title">Key Metrics</h3>
+            <div class="metrics-grid" id="metricsGrid">
+              <!-- Rendered by JS -->
+            </div>
+          </section>
+
+          <!-- Other Test Results -->
+          <section class="analysis-other">
+            <h3 class="analysis-section-title">Other Test Results</h3>
+            <div class="results-table-wrapper">
+              <table class="results-table" id="resultsTable">
+                <thead>
+                  <tr>
+                    <th>Test Name</th>
+                    <th>Value</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="resultsBody">
+                  <!-- Rendered by JS -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- CTA Banner -->
+          <div class="analysis-cta card">
+            <div class="analysis-cta__content">
+              <h3>Find the Right Specialist for These Results</h3>
+              <p>Get matched with verified healthcare providers based on your analysis.</p>
+            </div>
+            <a href="specialists.html" class="btn btn-primary">
+              Find Specialists
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </a>
+          </div>
+
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="analysis-sidebar">
+
+          <!-- Report Overview -->
+          <div class="card card-sm sidebar-card">
+            <h4 class="sidebar-card__title">Report Overview</h4>
+            <div class="sidebar-card__row">
+              <span class="sidebar-card__label">Filename</span>
+              <span class="sidebar-card__value" id="sidebarFilename">—</span>
+            </div>
+            <div class="sidebar-card__row">
+              <span class="sidebar-card__label">Analysis Date</span>
+              <span class="sidebar-card__value" id="sidebarDate">—</span>
+            </div>
+          </div>
+
+          <!-- AI Confidence Score -->
+          <div class="card card-sm sidebar-card">
+            <h4 class="sidebar-card__title">AI Confidence Score</h4>
+            <div class="confidence-ring" id="confidenceRing">
+              <svg viewBox="0 0 120 120" class="confidence-ring__svg">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-border)" stroke-width="8" />
+                <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-primary)" stroke-width="8"
+                  stroke-linecap="round" class="confidence-ring__progress" id="confidenceCircle" stroke-dasharray="314"
+                  stroke-dashoffset="314" transform="rotate(-90 60 60)" />
+              </svg>
+              <div class="confidence-ring__text">
+                <span class="confidence-ring__value" id="confidenceValue">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Tip -->
+          <div class="card card-sm sidebar-card sidebar-tip">
+            <div class="sidebar-tip__icon" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18h6" />
+                <path d="M10 22h4" />
+                <path
+                  d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
+              </svg>
+            </div>
+            <h4 class="sidebar-card__title">Quick Tip</h4>
+            <p class="sidebar-tip__text">Always share your AI-generated report with your doctor for professional
+              interpretation and personalized advice.</p>
+          </div>
+
+          <a href="upload.html" class="btn btn-outline btn-sm w-full" style="justify-content:center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Upload New Report
+          </a>
+
+          <button class="btn btn-outline btn-sm w-full" id="downloadSummaryBtn" type="button"
+            style="justify-content:center;margin-top:0.5rem">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download Summary
+          </button>
+
+        </aside>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script src="../js/nav.js" type="module"></script>
+  <script src="../js/analysis.js" type="module"></script>
+
+</body>
+
+</html>

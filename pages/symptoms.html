@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Symptom Checker — MediScan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/symptoms.css" />
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar__inner">
+        <a href="../index.html" class="navbar__logo" aria-label="MediScan home">
+          <img src="../assets/logo.svg" alt="MediScan" class="navbar__logo-img" />
+        </a>
+        <ul class="navbar__nav" role="list">
+          <li><a href="health-history.html">Health History</a></li>
+          <li><a href="specialists.html">Find Specialists</a></li>
+          <li><a href="symptoms.html" class="active">AI Health Check</a></li>
+        </ul>
+        <div id="navbar__user-slot"></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="symptoms-page">
+    <div id="step-indicator" class="container"></div>
+
+    <div class="container">
+      <div class="symptoms-layout">
+
+        <!-- Left: Body Area Selection -->
+        <div class="symptoms-body">
+          <section class="card">
+            <h2 class="symptoms-section-title">Select Affected Areas</h2>
+            <p class="symptoms-section-desc">Click on the body areas where you're experiencing symptoms.</p>
+
+            <div class="body-map">
+              <div class="body-map__figure">
+                <!-- Simplified body region buttons -->
+                <button class="body-region" data-area="head" style="top:2%;left:38%;width:24%;height:12%"
+                  aria-label="Head">
+                  <span class="body-region__dot"></span>
+                </button>
+                <button class="body-region" data-area="chest" style="top:22%;left:28%;width:44%;height:14%"
+                  aria-label="Chest">
+                  <span class="body-region__dot"></span>
+                </button>
+                <button class="body-region" data-area="abdomen" style="top:36%;left:28%;width:44%;height:14%"
+                  aria-label="Abdomen">
+                  <span class="body-region__dot"></span>
+                </button>
+                <button class="body-region" data-area="left-arm" style="top:22%;left:6%;width:18%;height:28%"
+                  aria-label="Left Arm">
+                  <span class="body-region__dot"></span>
+                </button>
+                <button class="body-region" data-area="right-arm" style="top:22%;left:76%;width:18%;height:28%"
+                  aria-label="Right Arm">
+                  <span class="body-region__dot"></span>
+                </button>
+                <button class="body-region" data-area="left-leg" style="top:54%;left:18%;width:24%;height:36%"
+                  aria-label="Left Leg">
+                  <span class="body-region__dot"></span>
+                </button>
+                <button class="body-region" data-area="right-leg" style="top:54%;left:58%;width:24%;height:36%"
+                  aria-label="Right Leg">
+                  <span class="body-region__dot"></span>
+                </button>
+
+                <!-- Body silhouette SVG -->
+                <svg class="body-map__silhouette" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="50" cy="8" rx="10" ry="9" fill="currentColor" opacity="0.07" />
+                  <rect x="35" y="17" width="30" height="22" rx="6" fill="currentColor" opacity="0.07" />
+                  <rect x="35" y="39" width="30" height="18" rx="4" fill="currentColor" opacity="0.07" />
+                  <rect x="13" y="19" width="18" height="30" rx="5" fill="currentColor" opacity="0.07" />
+                  <rect x="69" y="19" width="18" height="30" rx="5" fill="currentColor" opacity="0.07" />
+                  <rect x="25" y="57" width="22" height="36" rx="5" fill="currentColor" opacity="0.07" />
+                  <rect x="53" y="57" width="22" height="36" rx="5" fill="currentColor" opacity="0.07" />
+                </svg>
+              </div>
+            </div>
+
+            <div class="selected-areas" id="selectedAreas">
+              <p class="selected-areas__empty">No areas selected yet</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- Right: Symptom Input -->
+        <div class="symptoms-input">
+          <section class="card">
+            <h2 class="symptoms-section-title">Describe Your Symptoms</h2>
+
+            <div class="form-group">
+              <label class="form-label" for="symptomDuration">How long have you had these symptoms?</label>
+              <select class="form-select" id="symptomDuration">
+                <option value="">Select duration...</option>
+                <option value="today">Started today</option>
+                <option value="few-days">A few days</option>
+                <option value="one-week">About a week</option>
+                <option value="two-weeks">2+ weeks</option>
+                <option value="one-month">1+ month</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Pain Level</label>
+              <div class="pain-slider">
+                <input type="range" class="pain-slider__input" id="painLevel" min="0" max="10" value="0" />
+                <div class="pain-slider__labels">
+                  <span>0</span>
+                  <span>5</span>
+                  <span>10</span>
+                </div>
+                <div class="pain-slider__value" id="painValue">0 / 10 — No pain</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Common Symptoms</label>
+              <div class="symptom-chips" id="symptomChips">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="otherSymptoms">Other Symptoms</label>
+              <textarea class="form-textarea" id="otherSymptoms" rows="3"
+                placeholder="Describe any other symptoms you're experiencing..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="existingConditions">Pre-existing Conditions</label>
+              <select class="form-select" id="existingConditions">
+                <option value="">Select if applicable...</option>
+                <option value="diabetes">Diabetes</option>
+                <option value="hypertension">Hypertension</option>
+                <option value="asthma">Asthma</option>
+                <option value="heart-disease">Heart Disease</option>
+                <option value="arthritis">Arthritis</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+          </section>
+
+          <!-- Actions -->
+          <div class="symptoms-actions">
+            <a href="../index.html" class="btn btn-ghost">Cancel</a>
+            <button class="btn btn-primary btn-lg" id="analyzeBtn" type="button" disabled>
+              Analyze Symptoms
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script src="../js/nav.js" type="module"></script>
+  <script src="../js/symptoms.js" type="module"></script>
+
+</body>
+
+</html>

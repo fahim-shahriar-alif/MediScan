@@ -1,0 +1,402 @@
+/* =============================================
+   AUTH PAGES — login, signup, forgot-password
+   ============================================= */
+
+.auth-body {
+  min-height: 100vh;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Minimal header ─────────────────────────────────────────────────────── */
+.auth-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* ─── Main centered layout ───────────────────────────────────────────────── */
+.auth-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+}
+
+/* ─── Card ───────────────────────────────────────────────────────────────── */
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 2.25rem 2rem;
+  animation: authCardIn 0.25s ease;
+}
+
+@keyframes authCardIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.auth-card__head {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.auth-card__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.375rem;
+}
+
+.auth-card__subtitle {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+/* Icon wrap (forgot password page) */
+.auth-card__icon-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.auth-card__icon {
+  width: 60px;
+  height: 60px;
+  background: var(--color-primary-light);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+.auth-card__icon--success {
+  background: #DCFCE7;
+  color: var(--color-success);
+}
+
+/* ─── Alert ──────────────────────────────────────────────────────────────── */
+.auth-alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.auth-alert--danger {
+  background: #FEE2E2;
+  color: #991B1B;
+  border-left: 3px solid var(--color-danger);
+}
+
+.auth-alert--success {
+  background: #DCFCE7;
+  color: #166534;
+  border-left: 3px solid var(--color-success);
+}
+
+.auth-alert--info {
+  background: var(--color-primary-light);
+  color: var(--color-primary-darker);
+  border-left: 3px solid var(--color-primary);
+}
+
+/* ─── OAuth buttons ──────────────────────────────────────────────────────── */
+.auth-oauth {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-bottom: 1.25rem;
+}
+
+.auth-oauth__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.6875rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: var(--font);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-oauth__btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+  color: var(--color-primary);
+}
+
+.auth-oauth__btn svg {
+  flex-shrink: 0;
+}
+
+/* ─── Divider ────────────────────────────────────────────────────────────── */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  color: var(--color-muted-light);
+  font-size: 0.8125rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* ─── Input with icon ────────────────────────────────────────────────────── */
+.auth-input-wrap {
+  position: relative;
+}
+
+.auth-input-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted-light);
+  pointer-events: none;
+  display: block;
+}
+
+.auth-input {
+  padding-left: 2.625rem !important;
+}
+
+.auth-toggle-pw {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-muted-light);
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.auth-toggle-pw:hover {
+  color: var(--color-primary);
+}
+
+/* ─── Label row (label + forgot link) ───────────────────────────────────── */
+.auth-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.auth-label-row .form-label {
+  margin-bottom: 0;
+}
+
+.auth-forgot {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.auth-forgot:hover {
+  text-decoration: underline;
+}
+
+/* ─── Field-level error ──────────────────────────────────────────────────── */
+.auth-field-error {
+  font-size: 0.8rem;
+  color: var(--color-danger);
+  margin-top: 0.375rem;
+  font-weight: 500;
+}
+
+/* ─── Remember me / checkbox ─────────────────────────────────────────────── */
+.auth-remember {
+  margin-bottom: 1.25rem;
+}
+
+.auth-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.auth-checkbox input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.auth-checkbox__box {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.auth-checkbox input:checked + .auth-checkbox__box {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.auth-checkbox input:checked + .auth-checkbox__box::after {
+  content: '';
+  display: block;
+  width: 5px;
+  height: 9px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.auth-checkbox__label {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.auth-checkbox__label a {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* ─── Submit button ──────────────────────────────────────────────────────── */
+.auth-submit {
+  width: 100%;
+  justify-content: center;
+  padding: 0.8125rem;
+  font-size: 0.9375rem;
+  border-radius: var(--radius-md);
+  margin-top: 0.25rem;
+}
+
+/* ─── Switch link ────────────────────────────────────────────────────────── */
+.auth-switch {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.auth-switch a {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+
+/* ─── Password strength ──────────────────────────────────────────────────── */
+.pw-strength {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.pw-strength__bar {
+  flex: 1;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.pw-strength__fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease, background 0.3s ease;
+  width: 0%;
+}
+
+.pw-strength__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 44px;
+  text-align: right;
+}
+
+/* ─── Demo token box ─────────────────────────────────────────────────────── */
+.auth-demo-token {
+  margin-bottom: 1rem;
+  font-size: 0.8125rem;
+}
+
+.auth-demo-token code {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  background: rgba(37,99,235,0.1);
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* ─── Resend button ──────────────────────────────────────────────────────── */
+.auth-resend {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  font-family: var(--font);
+  padding: 0;
+}
+
+.auth-resend:hover {
+  text-decoration: underline;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 1.75rem 1.25rem;
+    border-radius: var(--radius-md);
+  }
+
+  .auth-card__title {
+    font-size: 1.25rem;
+  }
+}

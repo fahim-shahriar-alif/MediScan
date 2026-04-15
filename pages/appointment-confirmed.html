@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Appointment Confirmed — MediScan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/appointment.css" />
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar__inner">
+        <a href="../index.html" class="navbar__logo" aria-label="MediScan home">
+          <img src="../assets/logo.svg" alt="MediScan" class="navbar__logo-img" />
+        </a>
+        <ul class="navbar__nav" role="list">
+          <li><a href="health-history.html">Health History</a></li>
+          <li><a href="specialists.html">Find Specialists</a></li>
+          <li><a href="symptoms.html">AI Health Check</a></li>
+        </ul>
+        <div id="navbar__user-slot"></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="confirmed-page">
+    <div class="container">
+      <div class="confirmed-card card">
+        <div class="confirmed-card__check" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <h2 class="confirmed-card__title">Appointment Confirmed!</h2>
+        <p class="confirmed-card__subtitle">Your appointment has been booked successfully.</p>
+
+        <div class="confirmed-card__number" id="confNumber">—</div>
+
+        <div class="confirmed-details" id="confirmedDetails">
+          <div class="confirmed-details__row">
+            <span class="confirmed-details__label">Doctor</span>
+            <span class="confirmed-details__value" id="confDoc">—</span>
+          </div>
+          <div class="confirmed-details__row">
+            <span class="confirmed-details__label">Specialty</span>
+            <span class="confirmed-details__value" id="confSpec">—</span>
+          </div>
+          <div class="confirmed-details__row">
+            <span class="confirmed-details__label">Date</span>
+            <span class="confirmed-details__value" id="confDate">—</span>
+          </div>
+          <div class="confirmed-details__row">
+            <span class="confirmed-details__label">Time</span>
+            <span class="confirmed-details__value" id="confTime">—</span>
+          </div>
+          <div class="confirmed-details__row">
+            <span class="confirmed-details__label">Location</span>
+            <span class="confirmed-details__value" id="confLoc">—</span>
+          </div>
+        </div>
+
+        <div class="confirmed-actions">
+          <a href="health-history.html" class="btn btn-outline">View Health History</a>
+          <a href="../index.html" class="btn btn-primary">Back to Home</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script src="../js/nav.js" type="module"></script>
+  <script type="module">
+    import { loadData, formatDate } from '../js/utils.js';
+
+    const confNum = loadData('confirmationNumber');
+    const appt = loadData('appointmentDetails');
+
+    document.getElementById('confNumber').textContent = confNum || 'MED-000000';
+
+    if (appt) {
+      const doc = appt.doctor;
+      document.getElementById('confDoc').textContent = doc.name;
+      document.getElementById('confSpec').textContent = doc.specialty;
+      document.getElementById('confDate').textContent = formatDate(appt.date);
+      document.getElementById('confTime').textContent = appt.timeLabel;
+      document.getElementById('confLoc').textContent = doc.address;
+    }
+  </script>
+
+</body>
+
+</html>

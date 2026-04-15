@@ -1,0 +1,209 @@
+/* =============================================
+   SYMPTOM CHECKER PAGE
+   ============================================= */
+.symptoms-page {
+  padding-bottom: 3rem;
+}
+
+.symptoms-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.symptoms-section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.375rem;
+}
+
+.symptoms-section-desc {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  margin-bottom: 1.25rem;
+}
+
+/* ─── Body Map ───────────────────────────────────────────────────────────── */
+.body-map {
+  margin-bottom: 1rem;
+}
+
+.body-map__figure {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 5;
+  max-height: 400px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.body-map__silhouette {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--color-primary);
+}
+
+.body-region {
+  position: absolute;
+  background: transparent;
+  border: 2px dashed transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 1;
+}
+
+.body-region:hover {
+  background: rgba(79, 104, 246, 0.08);
+  border-color: rgba(79, 104, 246, 0.3);
+}
+
+.body-region--selected {
+  background: rgba(79, 104, 246, 0.12) !important;
+  border-color: var(--color-primary) !important;
+  border-style: solid !important;
+}
+
+.body-region__dot {
+  width: 10px;
+  height: 10px;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.body-region--selected .body-region__dot {
+  opacity: 1;
+}
+
+/* ─── Selected Areas ─────────────────────────────────────────────────────── */
+.selected-areas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 32px;
+}
+
+.selected-areas__empty {
+  font-size: 0.8125rem;
+  color: var(--color-muted-light);
+  font-style: italic;
+}
+
+.selected-area-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+}
+
+.selected-area-tag__remove {
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.selected-area-tag__remove:hover {
+  opacity: 1;
+}
+
+/* ─── Pain Slider ────────────────────────────────────────────────────────── */
+.pain-slider {
+  margin-bottom: 0.5rem;
+}
+
+.pain-slider__input {
+  width: 100%;
+  accent-color: var(--color-primary);
+  margin-bottom: 0.375rem;
+}
+
+.pain-slider__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: var(--color-muted-light);
+  margin-bottom: 0.5rem;
+}
+
+.pain-slider__value {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ─── Symptom Chips ──────────────────────────────────────────────────────── */
+.symptom-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.symptom-chip {
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.symptom-chip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.symptom-chip--selected {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+/* ─── Actions ────────────────────────────────────────────────────────────── */
+.symptoms-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .symptoms-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .body-map__figure {
+    max-height: 300px;
+  }
+
+  .symptoms-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .symptoms-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

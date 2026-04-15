@@ -1,0 +1,211 @@
+/* =============================================
+   HEALTH HISTORY PAGE
+   ============================================= */
+.history-page {
+  padding: 1.5rem 0 3rem;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.history-header__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.history-header__subtitle {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+/* ─── Stats Row ──────────────────────────────────────────────────────────── */
+.history-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.stat-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-card__icon--primary {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.stat-card__icon--success {
+  background: #ECFDF5;
+  color: var(--color-success);
+}
+
+.stat-card__icon--warning {
+  background: #FEF9C3;
+  color: var(--color-warning);
+}
+
+.stat-card__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.stat-card__label {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+/* ─── Section ────────────────────────────────────────────────────────────── */
+.history-section {
+  margin-bottom: 2rem;
+}
+
+.history-section__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+}
+
+/* ─── Timeline ───────────────────────────────────────────────────────────── */
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0.6875rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-border);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 1.25rem;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-item__dot {
+  position: absolute;
+  left: -2rem;
+  top: 1.25rem;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  z-index: 1;
+}
+
+.timeline-item__dot--primary { background: var(--color-primary); }
+.timeline-item__dot--success { background: var(--color-success); }
+.timeline-item__dot--warning { background: var(--color-warning); }
+
+.timeline-item__content {
+  padding: 1.25rem;
+}
+
+.timeline-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-item__date {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.timeline-item__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.25rem;
+}
+
+.timeline-item__desc {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-item__link {
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.timeline-item__link:hover {
+  text-decoration: underline;
+}
+
+.timeline__empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-muted-light);
+}
+
+.timeline__empty svg {
+  margin-bottom: 0.75rem;
+  opacity: 0.4;
+}
+
+.timeline__empty p {
+  font-size: 0.9375rem;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .history-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .history-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .history-header__actions {
+    width: 100%;
+  }
+
+  .history-header__actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

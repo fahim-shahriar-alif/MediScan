@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Symptom Analysis Results — MediScan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/symptom-results.css" />
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar__inner">
+        <a href="../index.html" class="navbar__logo" aria-label="MediScan home">
+          <img src="../assets/logo.svg" alt="MediScan" class="navbar__logo-img" />
+        </a>
+        <ul class="navbar__nav" role="list">
+          <li><a href="health-history.html">Health History</a></li>
+          <li><a href="specialists.html">Find Specialists</a></li>
+          <li><a href="symptoms.html">AI Health Check</a></li>
+        </ul>
+        <div id="navbar__user-slot"></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="symptom-results-page">
+    <div id="step-indicator" class="container"></div>
+
+    <div class="container">
+      <div class="results-layout">
+
+        <!-- Main Results -->
+        <div class="results-main">
+
+          <!-- Urgency Banner -->
+          <div class="urgency-banner" id="urgencyBanner">
+            <div>
+              <strong id="urgencyTitle">—</strong>
+              <p id="urgencyDesc">—</p>
+            </div>
+          </div>
+
+          <!-- Condition Cards -->
+          <div id="conditionCards">
+            <!-- Rendered by JS -->
+          </div>
+
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="results-sidebar">
+
+          <div class="card">
+            <h3 class="results-sidebar__title">What's Next?</h3>
+            <p class="results-sidebar__text" id="nextSteps">
+              Based on your results, we recommend consulting with a healthcare provider for a proper evaluation.
+            </p>
+            <a href="specialists.html" class="btn btn-primary results-sidebar__btn">Find a Specialist</a>
+          </div>
+
+          <div class="card">
+            <h3 class="results-sidebar__title">Important Reminder</h3>
+            <p class="results-sidebar__text">
+              This AI analysis is not a medical diagnosis. Results are based on pattern matching and should be verified
+              by a qualified healthcare professional.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3 class="results-sidebar__title">Your Symptoms</h3>
+            <div id="symptomsSummary">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script src="../js/nav.js" type="module"></script>
+  <script type="module">
+    import { renderStepIndicator } from '../js/nav.js';
+    import { loadData } from '../js/utils.js';
+
+    renderStepIndicator('#step-indicator', ['Select Symptoms', 'Review', 'Results'], 3);
+
+    const result = loadData('symptomResult');
+    if (!result) {
+      document.getElementById('conditionCards').innerHTML =
+        '<p style="color:var(--color-muted);text-align:center;padding:2rem">No results found. Please complete the symptom checker first.</p>';
+    } else {
+      // Urgency banner
+      const banner = document.getElementById('urgencyBanner');
+      const urgency = result.urgency || 'low';
+      banner.classList.add(`urgency-banner--${urgency}`);
+      document.getElementById('urgencyTitle').textContent = result.urgencyTitle || 'Analysis Complete';
+      document.getElementById('urgencyDesc').textContent = result.urgencyDesc || '';
+
+      // Condition cards
+      const cards = document.getElementById('conditionCards');
+      if (result.conditions?.length) {
+        cards.innerHTML = result.conditions.map(c => {
+          const matchClass = c.match >= 75 ? 'high' : c.match >= 50 ? 'medium' : 'low';
+          return `
+            <div class="condition-card">
+              <span class="condition-card__match condition-card__match--${matchClass}">
+                ${c.match}% Match
+              </span>
+              <h3 class="condition-card__name">${c.name}</h3>
+              <p class="condition-card__desc">${c.description}</p>
+              <div class="condition-card__recommendations">
+                <h4>Recommendations</h4>
+                <ul>${c.recommendations.map(r => `<li>${r}</li>`).join('')}</ul>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Symptoms summary sidebar
+      const data = loadData('symptomData');
+      if (data?.symptoms?.length) {
+        document.getElementById('symptomsSummary').innerHTML =
+          data.symptoms.map(s => `<span class="badge badge-neutral" style="margin:0.125rem">${s}</span>`).join(' ');
+      }
+    }
+  </script>
+
+</body>
+
+</html>

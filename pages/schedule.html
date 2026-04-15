@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schedule Appointment — MediScan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/schedule.css" />
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar__inner">
+        <a href="../index.html" class="navbar__logo" aria-label="MediScan home">
+          <img src="../assets/logo.svg" alt="MediScan" class="navbar__logo-img" />
+        </a>
+        <ul class="navbar__nav" role="list">
+          <li><a href="health-history.html">Health History</a></li>
+          <li><a href="specialists.html">Find Specialists</a></li>
+          <li><a href="symptoms.html">AI Health Check</a></li>
+        </ul>
+        <div id="navbar__user-slot"></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="schedule-page">
+    <div class="container">
+      <div class="schedule-layout">
+
+        <!-- Sidebar: Doctor Info -->
+        <aside class="schedule-sidebar card" id="doctorSidebar">
+          <div class="schedule-doctor">
+            <div class="schedule-doctor__avatar" id="docAvatar">—</div>
+            <h3 class="schedule-doctor__name" id="docName">Select a specialist</h3>
+            <p class="schedule-doctor__specialty" id="docSpecialty">—</p>
+            <div class="schedule-doctor__rating">
+              <span class="star-rating" id="docRating">—</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main: Calendar + Time Slots -->
+        <div class="schedule-main">
+
+          <!-- Calendar -->
+          <section class="card schedule-calendar">
+            <div class="schedule-calendar__header">
+              <button class="btn btn-ghost btn-sm" id="prevMonth" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <h3 class="schedule-calendar__month" id="calendarMonth">—</h3>
+              <button class="btn btn-ghost btn-sm" id="nextMonth" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+            <div class="schedule-calendar__weekdays">
+              <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+            <div class="schedule-calendar__days" id="calendarDays">
+              <!-- Rendered by JS -->
+            </div>
+          </section>
+
+          <!-- Time Slots -->
+          <section class="card schedule-times">
+            <h3 class="schedule-times__title">Select a Time</h3>
+            <div class="schedule-times__group">
+              <h4 class="schedule-times__label">Morning</h4>
+              <div class="schedule-times__slots" id="morningSlots"></div>
+            </div>
+            <div class="schedule-times__group">
+              <h4 class="schedule-times__label">Afternoon</h4>
+              <div class="schedule-times__slots" id="afternoonSlots"></div>
+            </div>
+            <div class="schedule-times__group">
+              <h4 class="schedule-times__label">Evening</h4>
+              <div class="schedule-times__slots" id="eveningSlots"></div>
+            </div>
+          </section>
+
+          <!-- Clinic Location -->
+          <div class="card schedule-location">
+            <h4 class="schedule-location__title">Clinic Location</h4>
+            <p class="schedule-location__address" id="clinicAddress">—</p>
+            <div class="schedule-location__map">
+              <div class="schedule-location__map-placeholder">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <span>Map view</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Before Your Appointment -->
+          <div class="card schedule-tips">
+            <h4 class="schedule-tips__title">Before Your Appointment</h4>
+            <ul class="schedule-tips__list">
+              <li>Bring a valid photo ID and your insurance card</li>
+              <li>Arrive 15 minutes early for check-in</li>
+              <li>Bring a list of current medications</li>
+              <li>Prepare any questions you have for the doctor</li>
+            </ul>
+          </div>
+
+          <!-- Actions -->
+          <div class="schedule-actions">
+            <a href="specialists.html" class="btn btn-ghost">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+              Back to Specialists
+            </a>
+            <button class="btn btn-primary btn-lg" id="reviewBtn" type="button" disabled>
+              Review & Confirm Appointment
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script src="../js/nav.js" type="module"></script>
+  <script src="../js/schedule.js" type="module"></script>
+
+</body>
+
+</html>
