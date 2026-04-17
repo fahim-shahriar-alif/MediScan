@@ -172,7 +172,7 @@ function updateReadyCard() {
   }
 }
 
-// ─── Confirm button ────────────────────────────────────────────────────────
+// ─── Confirm button → open review modal ───────────────────────────────────
 const reviewBtn = document.getElementById('reviewBtn');
 
 function updateConfirmBtn() {
@@ -181,11 +181,157 @@ function updateConfirmBtn() {
 
 reviewBtn.addEventListener('click', () => {
   if (!selectedDate || !selectedSlot) return;
-  saveData('appointmentDetails', {
-    doctor: doctor || { name: 'Doctor', specialty: 'Specialist', address: '—', phone: '—', distance: '—' },
+
+  const appt = {
+    doctor:    doctor || { name: 'Doctor', specialty: 'Specialist', address: '—', phone: '—', distance: '—' },
     date:      selectedDate.toISOString(),
     time:      selectedSlot.hour,
     timeLabel: selectedSlot.label,
-  });
-  window.location.href = 'appointment-review.html';
+  };
+  saveData('appointmentDetails', appt);
+  showReviewModal(appt);
 });
+
+// ─── Review modal ──────────────────────────────────────────────────────────
+function showReviewModal(appt) {
+  const doc = appt.doctor;
+  const initials = doc.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  const dateStr = new Date(appt.date).toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(doc.address)}`;
+
+  // Remove any existing modal
+  document.getElementById('reviewModal')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'reviewModal';
+  overlay.className = 'review-modal-overlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'reviewModalTitle');
+
+  overlay.innerHTML = `
+    <div class="review-modal">
+
+      <!-- Header -->
+      <div class="review-modal__header">
+        <h2 class="review-modal__title" id="reviewModalTitle">Review Your Appointment</h2>
+        <p class="review-modal__subtitle">Please confirm the details below</p>
+        <button class="review-modal__close" id="reviewModalClose" type="button" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Doctor row -->
+      <div class="review-modal__doctor">
+        <div class="review-modal__avatar">${initials}</div>
+        <div class="review-modal__doc-info">
+          <h3 class="review-modal__doc-name">${doc.name}</h3>
+          <p class="review-modal__doc-specialty">${doc.specialty}</p>
+          <span class="badge badge-normal" style="margin-top:0.25rem">
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Verified Provider
+          </span>
+        </div>
+      </div>
+
+      <hr class="review-modal__divider" />
+
+      <!-- Details -->
+      <div class="review-modal__details">
+
+        <div class="review-modal__row">
+          <div class="review-modal__row-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <p class="review-modal__row-label">Location</p>
+            <p class="review-modal__row-value">${doc.address}</p>
+            <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer"
+               class="review-modal__row-link">View Directions</a>
+          </div>
+        </div>
+
+        <div class="review-modal__row">
+          <div class="review-modal__row-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div>
+            <p class="review-modal__row-label">Date &amp; Time</p>
+            <p class="review-modal__row-value">${dateStr} at ${appt.timeLabel}</p>
+          </div>
+        </div>
+
+        <div class="review-modal__row">
+          <div class="review-modal__row-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+            </svg>
+          </div>
+          <div>
+            <p class="review-modal__row-label">Arrival</p>
+            <p class="review-modal__row-value">Please arrive 15 minutes before your appointment</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Actions -->
+      <div class="review-modal__actions">
+        <button class="btn btn-ghost" id="reviewModalEdit" type="button">
+          Edit Details
+        </button>
+        <button class="btn btn-primary btn-lg review-modal__confirm" id="reviewModalConfirm" type="button">
+          Confirm &amp; Book Appointment
+        </button>
+      </div>
+
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  // Trap focus on open
+  overlay.querySelector('#reviewModalConfirm').focus();
+
+  // Close handlers
+  const close = () => {
+    overlay.classList.add('review-modal-overlay--out');
+    overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
+  };
+
+  overlay.querySelector('#reviewModalClose').addEventListener('click', close);
+  overlay.querySelector('#reviewModalEdit').addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', function onEsc(e) {
+    if (e.key === 'Escape') { close(); document.removeEventListener('keydown', onEsc); }
+  });
+
+  // Confirm → save confirmation number and navigate
+  overlay.querySelector('#reviewModalConfirm').addEventListener('click', () => {
+    const { generateConfirmationNumber, saveData: sd } = window._scheduleUtils || {};
+    // Use inline generation since we can't import here easily
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let num = 'MS-';
+    for (let i = 0; i < 8; i++) num += chars[Math.floor(Math.random() * chars.length)];
+    saveData('confirmationNumber', num);
+    window.location.href = 'appointment-confirmed.html';
+  });
+}
