@@ -109,7 +109,9 @@
       if (data.symptoms?.length) {
         html += `<div class="confirm-summary__row">
           <span class="confirm-summary__label">Symptoms</span>
-          <span class="confirm-summary__value">${data.symptoms.join(', ')}</span>
+          <div class="confirm-symptom-tags">
+            ${data.symptoms.map(s => `<span class="confirm-symptom-tag">${s}</span>`).join('')}
+          </div>
         </div>`;
       }
 

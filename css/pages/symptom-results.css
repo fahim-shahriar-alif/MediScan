@@ -1,15 +1,16 @@
 /* =============================================
-   SYMPTOM RESULTS & CONFIRM PAGES
+   SYMPTOM CONFIRM & RESULTS PAGES
    ============================================= */
 
-/* Shared layout for confirm & results */
 .confirm-page,
 .symptom-results-page {
+  background: var(--color-bg);
   padding-bottom: 3rem;
 }
 
+/* ─── Confirm card ───────────────────────────────────────────────────────── */
 .confirm-card {
-  max-width: 640px;
+  max-width: 660px;
   margin: 1.5rem auto 0;
   padding: 2rem;
 }
@@ -29,36 +30,72 @@
   margin-bottom: 1.5rem;
 }
 
-/* ─── Confirm Summary ────────────────────────────────────────────────────── */
+/* Summary table */
 .confirm-summary {
   background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 1rem 1.25rem;
+  overflow: hidden;
   margin-bottom: 1.25rem;
 }
 
 .confirm-summary__row {
   display: flex;
   justify-content: space-between;
-  padding: 0.5rem 0;
+  align-items: flex-start;
+  padding: 0.75rem 1.25rem;
+  gap: 1rem;
 }
 
 .confirm-summary__row:not(:last-child) {
   border-bottom: 1px solid var(--color-border);
 }
 
+.confirm-summary__row:nth-child(even) {
+  background: rgba(239,246,255,0.5);
+}
+
 .confirm-summary__label {
   font-size: 0.8125rem;
   color: var(--color-muted);
-  font-weight: 500;
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 110px;
 }
 
 .confirm-summary__value {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-text);
-  font-weight: 600;
+  font-weight: 500;
   text-align: right;
-  max-width: 320px;
+}
+
+/* Symptom tags in confirm */
+.confirm-symptom-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: flex-end;
+}
+
+.confirm-symptom-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem 0.5rem;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+}
+
+/* Pain level badge */
+.confirm-pain-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 700;
 }
 
 .confirm-disclaimer {
@@ -70,85 +107,143 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding-top: 1rem;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--color-border);
 }
 
-/* ─── Spinner ────────────────────────────────────────────────────────────── */
+/* Spinner */
 .spinner {
   display: inline-block;
-  width: 18px;
-  height: 18px;
-  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid rgba(255,255,255,0.3);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
   vertical-align: middle;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* ─── Results Layout ─────────────────────────────────────────────────────── */
+/* ─── Results layout ─────────────────────────────────────────────────────── */
 .results-layout {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr 280px;
   gap: 1.5rem;
   margin-top: 1rem;
 }
 
-/* ─── Urgency Banner ─────────────────────────────────────────────────────── */
+/* ─── Urgency banner ─────────────────────────────────────────────────────── */
 .urgency-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
   padding: 1rem 1.25rem;
   border-radius: var(--radius-md);
   font-size: 0.9rem;
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  margin-top: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
-.urgency-banner--low    { background: #DCFCE7; color: #166534; border-left: 4px solid var(--color-success); }
-.urgency-banner--medium { background: #FEF9C3; color: #92400E; border-left: 4px solid var(--color-warning); }
-.urgency-banner--high   { background: #FEE2E2; color: #991B1B; border-left: 4px solid var(--color-danger); }
+.urgency-banner__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 
-/* ─── Condition Cards ────────────────────────────────────────────────────── */
+.urgency-banner__body strong {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.urgency-banner__body p {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+.urgency-banner--low {
+  background: #DCFCE7;
+  color: #166534;
+  border-left: 4px solid var(--color-success);
+}
+.urgency-banner--low .urgency-banner__icon { background: #BBF7D0; color: var(--color-success); }
+
+.urgency-banner--medium {
+  background: #FEF9C3;
+  color: #92400E;
+  border-left: 4px solid var(--color-warning);
+}
+.urgency-banner--medium .urgency-banner__icon { background: #FDE68A; color: var(--color-warning); }
+
+.urgency-banner--high {
+  background: #FEE2E2;
+  color: #991B1B;
+  border-left: 4px solid var(--color-danger);
+}
+.urgency-banner--high .urgency-banner__icon { background: #FECACA; color: var(--color-danger); }
+
+/* ─── Condition cards ────────────────────────────────────────────────────── */
 .condition-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
   margin-bottom: 1rem;
+  transition: box-shadow 0.2s ease;
 }
 
-.condition-card__match {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.25rem 0.625rem;
-  border-radius: var(--radius-full);
+.condition-card:hover {
+  box-shadow: var(--shadow-modal);
+}
+
+.condition-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 0.75rem;
 }
 
-.condition-card__match--high {
-  background: #FEF9C3;
-  color: var(--color-warning);
+.condition-card__match {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
 }
 
-.condition-card__match--medium {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
+.condition-card__match--high   { background: #FEF9C3; color: #92400E; }
+.condition-card__match--medium { background: var(--color-primary-light); color: var(--color-primary); }
+.condition-card__match--low    { background: #DCFCE7; color: #166534; }
+
+/* Match bar */
+.condition-card__bar {
+  height: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 0.875rem;
 }
 
-.condition-card__match--low {
-  background: #ECFDF5;
-  color: var(--color-success);
+.condition-card__bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.6s ease;
 }
+
+.condition-card__bar-fill--high   { background: var(--color-warning); }
+.condition-card__bar-fill--medium { background: var(--color-primary); }
+.condition-card__bar-fill--low    { background: var(--color-success); }
 
 .condition-card__name {
-  font-size: 1.0625rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--color-text);
   margin-bottom: 0.375rem;
@@ -157,47 +252,49 @@
 .condition-card__desc {
   font-size: 0.875rem;
   color: var(--color-muted);
-  line-height: 1.6;
+  line-height: 1.65;
   margin-bottom: 1rem;
 }
 
-.condition-card__recommendations {
+.condition-card__recs {
   background: var(--color-bg);
   border-radius: var(--radius-sm);
   padding: 0.875rem 1rem;
 }
 
-.condition-card__recommendations h4 {
-  font-size: 0.75rem;
+.condition-card__recs-title {
+  font-size: 0.6875rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--color-muted);
   margin-bottom: 0.5rem;
 }
 
-.condition-card__recommendations ul {
+.condition-card__recs ul {
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
 }
 
-.condition-card__recommendations li {
+.condition-card__recs li {
   font-size: 0.8125rem;
   color: var(--color-text);
   padding-left: 1.25rem;
   position: relative;
+  line-height: 1.5;
 }
 
-.condition-card__recommendations li::before {
+.condition-card__recs li::before {
   content: '→';
   position: absolute;
   left: 0;
   color: var(--color-primary);
+  font-weight: 700;
 }
 
-/* ─── Results Sidebar ────────────────────────────────────────────────────── */
+/* ─── Results sidebar ────────────────────────────────────────────────────── */
 .results-sidebar {
   display: flex;
   flex-direction: column;
@@ -224,9 +321,50 @@
 }
 
 .results-sidebar__btn {
-  margin-top: 0.75rem;
+  margin-top: 0.875rem;
   width: 100%;
   justify-content: center;
+}
+
+/* Symptom tags in sidebar */
+.results-symptom-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.results-symptom-tag {
+  display: inline-flex;
+  padding: 0.2rem 0.625rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--radius-full);
+}
+
+/* Pain indicator in sidebar */
+.results-pain-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  margin-bottom: 0.375rem;
+}
+
+.results-pain-bar {
+  height: 6px;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: 0.375rem;
+}
+
+.results-pain-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease;
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────── */

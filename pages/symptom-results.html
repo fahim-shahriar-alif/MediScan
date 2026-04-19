@@ -40,18 +40,11 @@
         <!-- Main Results -->
         <div class="results-main">
 
-          <!-- Urgency Banner -->
-          <div class="urgency-banner" id="urgencyBanner">
-            <div>
-              <strong id="urgencyTitle">—</strong>
-              <p id="urgencyDesc">—</p>
-            </div>
-          </div>
+          <!-- Urgency Banner — fully rendered by JS -->
+          <div class="urgency-banner" id="urgencyBanner"></div>
 
           <!-- Condition Cards -->
-          <div id="conditionCards">
-            <!-- Rendered by JS -->
-          </div>
+          <div id="conditionCards"></div>
 
         </div>
 
@@ -60,26 +53,29 @@
 
           <div class="card">
             <h3 class="results-sidebar__title">What's Next?</h3>
-            <p class="results-sidebar__text" id="nextSteps">
+            <p class="results-sidebar__text">
               Based on your results, we recommend consulting with a healthcare provider for a proper evaluation.
             </p>
             <a href="specialists.html" class="btn btn-primary results-sidebar__btn">Find a Specialist</a>
           </div>
 
           <div class="card">
-            <h3 class="results-sidebar__title">Important Reminder</h3>
-            <p class="results-sidebar__text">
-              This AI analysis is not a medical diagnosis. Results are based on pattern matching and should be verified
-              by a qualified healthcare professional.
-            </p>
+            <h3 class="results-sidebar__title">Your Symptoms</h3>
+            <div id="symptomsSummary"></div>
+            <div id="painSummary" style="margin-top:0.875rem"></div>
           </div>
 
           <div class="card">
-            <h3 class="results-sidebar__title">Your Symptoms</h3>
-            <div id="symptomsSummary">
-              <!-- Rendered by JS -->
-            </div>
+            <h3 class="results-sidebar__title">Important Reminder</h3>
+            <p class="results-sidebar__text">
+              This AI analysis is not a medical diagnosis. Always verify results with a qualified healthcare
+              professional.
+            </p>
           </div>
+
+          <a href="symptoms.html" class="btn btn-ghost btn-sm" style="justify-content:center;width:100%">
+            Start New Analysis
+          </a>
 
         </aside>
       </div>
@@ -100,41 +96,79 @@
     const result = loadData('symptomResult');
     if (!result) {
       document.getElementById('conditionCards').innerHTML =
-        '<p style="color:var(--color-muted);text-align:center;padding:2rem">No results found. Please complete the symptom checker first.</p>';
+        '<p style="color:var(--color-muted);text-align:center;padding:2rem">No results found. <a href="symptoms.html">Start the symptom checker</a>.</p>';
     } else {
       // Urgency banner
       const banner = document.getElementById('urgencyBanner');
       const urgency = result.urgency || 'low';
       banner.classList.add(`urgency-banner--${urgency}`);
-      document.getElementById('urgencyTitle').textContent = result.urgencyTitle || 'Analysis Complete';
-      document.getElementById('urgencyDesc').textContent = result.urgencyDesc || '';
+
+      const icons = {
+        low: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+        medium: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+        high: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+      };
+
+      banner.innerHTML = `
+        <div class="urgency-banner__icon">${icons[urgency] || icons.low}</div>
+        <div class="urgency-banner__body">
+          <strong>${result.urgencyTitle || 'Analysis Complete'}</strong>
+          <p>${result.urgencyDesc || ''}</p>
+        </div>`;
 
       // Condition cards
       const cards = document.getElementById('conditionCards');
       if (result.conditions?.length) {
         cards.innerHTML = result.conditions.map(c => {
-          const matchClass = c.match >= 75 ? 'high' : c.match >= 50 ? 'medium' : 'low';
+          const matchClass = c.match >= 70 ? 'high' : c.match >= 45 ? 'medium' : 'low';
           return `
             <div class="condition-card">
-              <span class="condition-card__match condition-card__match--${matchClass}">
-                ${c.match}% Match
-              </span>
-              <h3 class="condition-card__name">${c.name}</h3>
+              <div class="condition-card__top">
+                <h3 class="condition-card__name">${c.name}</h3>
+                <span class="condition-card__match condition-card__match--${matchClass}">
+                  ${c.match}% Match
+                </span>
+              </div>
+              <div class="condition-card__bar">
+                <div class="condition-card__bar-fill condition-card__bar-fill--${matchClass}"
+                     style="width:${c.match}%"></div>
+              </div>
               <p class="condition-card__desc">${c.description}</p>
-              <div class="condition-card__recommendations">
-                <h4>Recommendations</h4>
+              <div class="condition-card__recs">
+                <p class="condition-card__recs-title">Recommendations</p>
                 <ul>${c.recommendations.map(r => `<li>${r}</li>`).join('')}</ul>
               </div>
-            </div>
-          `;
+            </div>`;
         }).join('');
       }
 
-      // Symptoms summary sidebar
+      // Sidebar — symptoms summary
       const data = loadData('symptomData');
-      if (data?.symptoms?.length) {
-        document.getElementById('symptomsSummary').innerHTML =
-          data.symptoms.map(s => `<span class="badge badge-neutral" style="margin:0.125rem">${s}</span>`).join(' ');
+      if (data) {
+        // Symptom tags
+        if (data.symptoms?.length) {
+          document.getElementById('symptomsSummary').innerHTML = `
+            <div class="results-symptom-tags">
+              ${data.symptoms.map(s => `<span class="results-symptom-tag">${s}</span>`).join('')}
+            </div>`;
+        }
+
+        // Pain level
+        const painEl = document.getElementById('painSummary');
+        if (painEl && data.painLevel !== undefined) {
+          const pct = (data.painLevel / 10) * 100;
+          const col = data.painLevel <= 3 ? 'var(--color-success)'
+            : data.painLevel <= 6 ? 'var(--color-warning)'
+              : 'var(--color-danger)';
+          painEl.innerHTML = `
+            <div class="results-pain-row">
+              <span>Pain Level</span>
+              <strong style="color:${col}">${data.painLevel} / 10</strong>
+            </div>
+            <div class="results-pain-bar">
+              <div class="results-pain-fill" style="width:${pct}%;background:${col}"></div>
+            </div>`;
+        }
       }
     }
   </script>

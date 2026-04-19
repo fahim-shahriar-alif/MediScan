@@ -37,128 +37,181 @@
     <div class="container">
       <div class="symptoms-layout">
 
-        <!-- Left: Body Area Selection -->
+        <!-- ── LEFT: Body Map ──────────────────────────────────────────── -->
         <div class="symptoms-body">
-          <section class="card">
+          <div class="card">
             <h2 class="symptoms-section-title">Select Affected Areas</h2>
-            <p class="symptoms-section-desc">Click on the body areas where you're experiencing symptoms.</p>
+            <p class="symptoms-section-desc">Tap the body regions where you feel symptoms.</p>
 
             <div class="body-map">
               <div class="body-map__figure">
-                <!-- Simplified body region buttons -->
-                <button class="body-region" data-area="head" style="top:2%;left:38%;width:24%;height:12%"
+
+                <!-- Anatomical SVG silhouette (front view) -->
+                <svg class="body-map__silhouette" viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true">
+                  <!-- Head -->
+                  <ellipse cx="100" cy="32" rx="22" ry="26" fill="#BFDBFE" stroke="#93C5FD" stroke-width="1.5" />
+                  <!-- Neck -->
+                  <rect x="91" y="56" width="18" height="14" rx="4" fill="#BFDBFE" stroke="#93C5FD"
+                    stroke-width="1.5" />
+                  <!-- Shoulders -->
+                  <path d="M60 72 Q50 68 42 80 L42 130 Q42 136 48 136 L68 136 L68 72 Z" fill="#DBEAFE" stroke="#93C5FD"
+                    stroke-width="1.5" />
+                  <path d="M140 72 Q150 68 158 80 L158 130 Q158 136 152 136 L132 136 L132 72 Z" fill="#DBEAFE"
+                    stroke="#93C5FD" stroke-width="1.5" />
+                  <!-- Torso / Chest -->
+                  <path d="M68 70 L132 70 L138 140 L62 140 Z" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" />
+                  <!-- Abdomen -->
+                  <path d="M62 140 L138 140 L134 200 L66 200 Z" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" />
+                  <!-- Pelvis -->
+                  <path d="M66 200 L134 200 L130 220 L70 220 Z" fill="#BFDBFE" stroke="#93C5FD" stroke-width="1.5" />
+                  <!-- Left arm (user's right) -->
+                  <path d="M68 72 L48 80 L40 160 L56 162 L66 100 L68 72 Z" fill="#DBEAFE" stroke="#93C5FD"
+                    stroke-width="1.5" />
+                  <!-- Left forearm -->
+                  <path d="M40 160 L36 230 L52 232 L56 162 Z" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" />
+                  <!-- Right arm (user's left) -->
+                  <path d="M132 72 L152 80 L160 160 L144 162 L134 100 L132 72 Z" fill="#DBEAFE" stroke="#93C5FD"
+                    stroke-width="1.5" />
+                  <!-- Right forearm -->
+                  <path d="M160 160 L164 230 L148 232 L144 162 Z" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" />
+                  <!-- Left thigh -->
+                  <path d="M70 220 L100 222 L98 310 L72 308 Z" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" />
+                  <!-- Left shin -->
+                  <path d="M72 308 L98 310 L96 370 L74 370 Z" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" />
+                  <!-- Right thigh -->
+                  <path d="M130 220 L100 222 L102 310 L128 308 Z" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" />
+                  <!-- Right shin -->
+                  <path d="M128 308 L102 310 L104 370 L126 370 Z" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" />
+                  <!-- Chest detail lines -->
+                  <line x1="100" y1="75" x2="100" y2="138" stroke="#93C5FD" stroke-width="0.8" stroke-dasharray="3,3" />
+                  <!-- Collar bones -->
+                  <path d="M68 72 Q84 66 100 68 Q116 66 132 72" fill="none" stroke="#93C5FD" stroke-width="1" />
+                  <!-- Navel -->
+                  <circle cx="100" cy="172" r="3" fill="#93C5FD" />
+                </svg>
+
+                <!-- Clickable region overlays — positioned over the SVG -->
+                <button class="body-region" data-area="head" style="top:1%;left:33%;width:34%;height:20%"
                   aria-label="Head">
-                  <span class="body-region__dot"></span>
+                  <span class="body-region__label">Head</span>
                 </button>
-                <button class="body-region" data-area="chest" style="top:22%;left:28%;width:44%;height:14%"
+                <button class="body-region" data-area="chest" style="top:20%;left:30%;width:40%;height:18%"
                   aria-label="Chest">
-                  <span class="body-region__dot"></span>
+                  <span class="body-region__label">Chest</span>
                 </button>
-                <button class="body-region" data-area="abdomen" style="top:36%;left:28%;width:44%;height:14%"
+                <button class="body-region" data-area="abdomen" style="top:37%;left:30%;width:40%;height:18%"
                   aria-label="Abdomen">
-                  <span class="body-region__dot"></span>
+                  <span class="body-region__label">Abdomen</span>
                 </button>
-                <button class="body-region" data-area="left-arm" style="top:22%;left:6%;width:18%;height:28%"
+                <button class="body-region" data-area="left-arm" style="top:19%;left:4%;width:22%;height:36%"
                   aria-label="Left Arm">
-                  <span class="body-region__dot"></span>
+                  <span class="body-region__label">L. Arm</span>
                 </button>
-                <button class="body-region" data-area="right-arm" style="top:22%;left:76%;width:18%;height:28%"
+                <button class="body-region" data-area="right-arm" style="top:19%;left:74%;width:22%;height:36%"
                   aria-label="Right Arm">
-                  <span class="body-region__dot"></span>
+                  <span class="body-region__label">R. Arm</span>
                 </button>
-                <button class="body-region" data-area="left-leg" style="top:54%;left:18%;width:24%;height:36%"
+                <button class="body-region" data-area="left-leg" style="top:57%;left:20%;width:28%;height:40%"
                   aria-label="Left Leg">
-                  <span class="body-region__dot"></span>
+                  <span class="body-region__label">L. Leg</span>
                 </button>
-                <button class="body-region" data-area="right-leg" style="top:54%;left:58%;width:24%;height:36%"
+                <button class="body-region" data-area="right-leg" style="top:57%;left:52%;width:28%;height:40%"
                   aria-label="Right Leg">
-                  <span class="body-region__dot"></span>
+                  <span class="body-region__label">R. Leg</span>
                 </button>
 
-                <!-- Body silhouette SVG -->
-                <svg class="body-map__silhouette" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                  <ellipse cx="50" cy="8" rx="10" ry="9" fill="currentColor" opacity="0.07" />
-                  <rect x="35" y="17" width="30" height="22" rx="6" fill="currentColor" opacity="0.07" />
-                  <rect x="35" y="39" width="30" height="18" rx="4" fill="currentColor" opacity="0.07" />
-                  <rect x="13" y="19" width="18" height="30" rx="5" fill="currentColor" opacity="0.07" />
-                  <rect x="69" y="19" width="18" height="30" rx="5" fill="currentColor" opacity="0.07" />
-                  <rect x="25" y="57" width="22" height="36" rx="5" fill="currentColor" opacity="0.07" />
-                  <rect x="53" y="57" width="22" height="36" rx="5" fill="currentColor" opacity="0.07" />
-                </svg>
               </div>
             </div>
 
-            <div class="selected-areas" id="selectedAreas">
-              <p class="selected-areas__empty">No areas selected yet</p>
+            <!-- Legend -->
+            <div class="body-map__legend">
+              <div class="body-map__legend-item">
+                <div class="body-map__legend-dot body-map__legend-dot--available"></div>
+                Available
+              </div>
+              <div class="body-map__legend-item">
+                <div class="body-map__legend-dot body-map__legend-dot--selected"></div>
+                Selected
+              </div>
             </div>
-          </section>
+
+            <!-- Selected area tags -->
+            <div class="selected-areas-wrap">
+              <p class="selected-areas-label">Selected Areas</p>
+              <div class="selected-areas" id="selectedAreas">
+                <p class="selected-areas__empty">No areas selected yet</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Right: Symptom Input -->
+        <!-- ── RIGHT: Symptom Details ──────────────────────────────────── -->
         <div class="symptoms-input">
-          <section class="card">
+          <div class="card">
             <h2 class="symptoms-section-title">Describe Your Symptoms</h2>
+            <p class="symptoms-section-desc">Select all that apply and rate your discomfort.</p>
 
-            <div class="form-group">
-              <label class="form-label" for="symptomDuration">How long have you had these symptoms?</label>
-              <select class="form-select" id="symptomDuration">
-                <option value="">Select duration...</option>
-                <option value="today">Started today</option>
-                <option value="few-days">A few days</option>
-                <option value="one-week">About a week</option>
-                <option value="two-weeks">2+ weeks</option>
-                <option value="one-month">1+ month</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Pain Level</label>
-              <div class="pain-slider">
-                <input type="range" class="pain-slider__input" id="painLevel" min="0" max="10" value="0" />
-                <div class="pain-slider__labels">
-                  <span>0</span>
-                  <span>5</span>
-                  <span>10</span>
-                </div>
-                <div class="pain-slider__value" id="painValue">0 / 10 — No pain</div>
-              </div>
-            </div>
-
+            <!-- Common symptoms -->
             <div class="form-group">
               <label class="form-label">Common Symptoms</label>
-              <div class="symptom-chips" id="symptomChips">
-                <!-- Rendered by JS -->
+              <div class="symptom-chips" id="symptomChips"></div>
+            </div>
+
+            <!-- Severity slider -->
+            <div class="form-group">
+              <label class="form-label">
+                Severity Level
+                <span id="painValue" style="font-weight:600;margin-left:0.5rem">0 / 10 — No pain</span>
+              </label>
+              <input type="range" class="pain-slider__input" id="painLevel" min="0" max="10" value="0" />
+              <div class="severity-labels">
+                <span>None</span><span>Moderate</span><span>Severe</span>
               </div>
             </div>
 
+            <!-- Duration -->
             <div class="form-group">
-              <label class="form-label" for="otherSymptoms">Other Symptoms</label>
-              <textarea class="form-textarea" id="otherSymptoms" rows="3"
-                placeholder="Describe any other symptoms you're experiencing..."></textarea>
+              <label class="form-label">Duration</label>
+              <div class="duration-control" id="durationControl">
+                <button class="duration-btn" type="button" data-val="today">&lt; 24 hrs</button>
+                <button class="duration-btn" type="button" data-val="few-days">2–3 Days</button>
+                <button class="duration-btn" type="button" data-val="one-week">1 Week</button>
+                <button class="duration-btn" type="button" data-val="chronic">Chronic</button>
+              </div>
+              <input type="hidden" id="symptomDuration" value="" />
             </div>
 
+            <!-- Other symptoms -->
             <div class="form-group">
+              <label class="form-label" for="otherSymptoms">Additional Notes</label>
+              <textarea class="form-textarea" id="otherSymptoms" rows="2"
+                placeholder="Any other symptoms or context…"></textarea>
+            </div>
+
+            <!-- Pre-existing conditions -->
+            <div class="form-group" style="margin-bottom:0">
               <label class="form-label" for="existingConditions">Pre-existing Conditions</label>
               <select class="form-select" id="existingConditions">
-                <option value="">Select if applicable...</option>
+                <option value="">None / Not specified</option>
                 <option value="diabetes">Diabetes</option>
                 <option value="hypertension">Hypertension</option>
                 <option value="asthma">Asthma</option>
                 <option value="heart-disease">Heart Disease</option>
                 <option value="arthritis">Arthritis</option>
-                <option value="none">None</option>
               </select>
             </div>
-          </section>
+          </div>
 
           <!-- Actions -->
           <div class="symptoms-actions">
             <a href="../index.html" class="btn btn-ghost">Cancel</a>
             <button class="btn btn-primary btn-lg" id="analyzeBtn" type="button" disabled>
-              Analyze Symptoms
+              Continue to AI Analysis
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="9 18 15 12 9 6" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
               </svg>
             </button>
           </div>

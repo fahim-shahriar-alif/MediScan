@@ -1,28 +1,31 @@
 /* =============================================
-   SYMPTOM CHECKER PAGE
+   SYMPTOM CHECKER — symptoms.html
    ============================================= */
 .symptoms-page {
+  background: var(--color-bg);
   padding-bottom: 3rem;
 }
 
 .symptoms-layout {
   display: grid;
-  grid-template-columns: 380px 1fr;
+  grid-template-columns: 360px 1fr;
   gap: 1.5rem;
   margin-top: 1rem;
 }
 
+/* ─── Section titles ─────────────────────────────────────────────────────── */
 .symptoms-section-title {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--color-text);
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.25rem;
 }
 
 .symptoms-section-desc {
   font-size: 0.8125rem;
   color: var(--color-muted);
   margin-bottom: 1.25rem;
+  line-height: 1.5;
 }
 
 /* ─── Body Map ───────────────────────────────────────────────────────────── */
@@ -33,22 +36,26 @@
 .body-map__figure {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 5;
-  max-height: 400px;
-  background: var(--color-bg);
+  aspect-ratio: 1 / 1.8;
+  max-height: 380px;
+  background: #F0F6FF;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* The anatomical SVG silhouette */
 .body-map__silhouette {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  color: var(--color-primary);
 }
 
+/* Clickable region overlays */
 .body-region {
   position: absolute;
   background: transparent;
@@ -58,40 +65,91 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  z-index: 1;
+  transition: all 0.18s ease;
+  z-index: 2;
 }
 
 .body-region:hover {
-  background: rgba(79, 104, 246, 0.08);
-  border-color: rgba(79, 104, 246, 0.3);
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.4);
 }
 
 .body-region--selected {
-  background: rgba(79, 104, 246, 0.12) !important;
+  background: rgba(37, 99, 235, 0.15) !important;
   border-color: var(--color-primary) !important;
   border-style: solid !important;
 }
 
-.body-region__dot {
-  width: 10px;
-  height: 10px;
-  background: var(--color-primary);
-  border-radius: var(--radius-full);
+.body-region__label {
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: var(--color-primary);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(255,255,255,0.85);
+  padding: 1px 4px;
+  border-radius: 3px;
 }
 
-.body-region--selected .body-region__dot {
+.body-region:hover .body-region__label,
+.body-region--selected .body-region__label {
   opacity: 1;
 }
 
-/* ─── Selected Areas ─────────────────────────────────────────────────────── */
+/* Legend */
+.body-map__legend {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.625rem;
+  font-size: 0.6875rem;
+  color: var(--color-muted);
+}
+
+.body-map__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.body-map__legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1.5px solid;
+}
+
+.body-map__legend-dot--available {
+  background: transparent;
+  border-color: var(--color-border);
+}
+
+.body-map__legend-dot--selected {
+  background: rgba(37,99,235,0.15);
+  border-color: var(--color-primary);
+}
+
+/* ─── Selected area tags ─────────────────────────────────────────────────── */
+.selected-areas-wrap {
+  margin-top: 0.75rem;
+}
+
+.selected-areas-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
 .selected-areas {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  min-height: 32px;
+  gap: 0.375rem;
+  min-height: 28px;
 }
 
 .selected-areas__empty {
@@ -103,60 +161,121 @@
 .selected-area-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.25rem 0.75rem;
+  gap: 0.3rem;
+  padding: 0.2rem 0.625rem;
   background: var(--color-primary-light);
   color: var(--color-primary);
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: var(--radius-full);
+  border: 1px solid rgba(37,99,235,0.2);
 }
 
 .selected-area-tag__remove {
   cursor: pointer;
   font-size: 0.875rem;
   line-height: 1;
-  opacity: 0.7;
+  opacity: 0.6;
+  transition: opacity 0.15s;
 }
 
-.selected-area-tag__remove:hover {
-  opacity: 1;
+.selected-area-tag__remove:hover { opacity: 1; }
+
+/* ─── Right panel card ───────────────────────────────────────────────────── */
+.symptoms-input .card {
+  padding: 1.5rem;
 }
 
-/* ─── Pain Slider ────────────────────────────────────────────────────────── */
-.pain-slider {
-  margin-bottom: 0.5rem;
-}
-
+/* ─── Severity slider ────────────────────────────────────────────────────── */
 .pain-slider__input {
   width: 100%;
-  accent-color: var(--color-primary);
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, #16A34A, #F59E0B, #EF4444);
+  border-radius: var(--radius-full);
+  outline: none;
+  cursor: pointer;
   margin-bottom: 0.375rem;
+  display: block;
 }
 
-.pain-slider__labels {
+.pain-slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2.5px solid var(--color-primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.pain-slider__input::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.pain-slider__input::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2.5px solid var(--color-primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+
+.severity-labels {
   display: flex;
   justify-content: space-between;
   font-size: 0.6875rem;
   color: var(--color-muted-light);
-  margin-bottom: 0.5rem;
+  margin-top: 0.25rem;
 }
 
-.pain-slider__value {
-  font-size: 0.8125rem;
+/* ─── Duration segmented control ─────────────────────────────────────────── */
+.duration-control {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.375rem;
+}
+
+.duration-btn {
+  padding: 0.4375rem 0.25rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+  font-family: var(--font);
 }
 
-/* ─── Symptom Chips ──────────────────────────────────────────────────────── */
+.duration-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.duration-btn--active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #ffffff;
+}
+
+/* ─── Symptom chips ──────────────────────────────────────────────────────── */
 .symptom-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .symptom-chip {
-  padding: 0.375rem 0.875rem;
+  padding: 0.3125rem 0.75rem;
   font-size: 0.8125rem;
   font-weight: 500;
   border: 1.5px solid var(--color-border);
@@ -164,12 +283,14 @@
   background: var(--color-surface);
   color: var(--color-text);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  font-family: var(--font);
 }
 
 .symptom-chip:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
+  background: var(--color-primary-light);
 }
 
 .symptom-chip--selected {
@@ -183,18 +304,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border);
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .symptoms-layout {
     grid-template-columns: 1fr;
   }
+}
 
-  .body-map__figure {
-    max-height: 300px;
+@media (max-width: 480px) {
+  .duration-control {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .symptoms-actions {
