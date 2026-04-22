@@ -1,68 +1,166 @@
 /**
- * ai.js — AI pipeline for MediScan using Google APIs only.
+ * ai.js — OCR + Disease Detection pipeline for MediScan
  *
- * Report flow:  Image → Google Vision (OCR) → Gemini (analysis) → JSON
- * Symptom flow: User selections → Gemini (analysis) → JSON
+ * Flow: Image → Gemini Vision (OCR + Analysis in one call) → structured JSON
  *
- * Falls back to local mock data when API keys are not configured.
+ * Uses Gemini's multimodal capability to directly read the image,
+ * skipping the need for a separate Vision API key entirely.
  */
 
 import { saveData, MOCK_ANALYSIS, MOCK_SYMPTOM_RESULT } from './utils.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
-// GOOGLE VISION — OCR
+// GROQ — Multimodal image analysis (free alternative to Gemini)
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * Extracts text from a medical report image using Google Vision API.
- * DOCUMENT_TEXT_DETECTION preserves table structure, numbers, and units.
- *
- * @param {string} base64 - Base64 image (no data: prefix)
- * @returns {Promise<string>} Raw extracted text
- */
-async function ocrWithGoogleVision(base64) {
-  const key = CONFIG.GOOGLE_VISION_API_KEY;
-  if (!key) throw new Error('GOOGLE_VISION_API_KEY not set');
+async function analyzeImageWithGroq(base64Image, mimeType) {
+  const key   = CONFIG.GROQ_API_KEY;
+  const model = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
-  const res = await fetch(
-    `https://vision.googleapis.com/v1/images:annotate?key=${key}`,
+  const prompt = `You are an expert medical AI. Carefully read this medical report image and extract all test results.
+
+Return ONLY a valid JSON object with this exact structure (no markdown, no extra text):
+{
+  "summary": "2-3 sentence plain-language summary of the patient's overall health",
+  "status": "e.g. Pre-Diabetic Range / All Normal / Elevated Markers / Critical",
+  "statusBadge": "badge-normal OR badge-elevated OR badge-prediab OR badge-severe",
+  "confidenceScore": 85,
+  "metrics": [
     {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        requests: [{
-          image: { content: base64 },
-          features: [{ type: 'DOCUMENT_TEXT_DETECTION', maxResults: 1 }],
-          imageContext: { languageHints: ['en'] },
-        }],
-      }),
+      "name": "exact test name from report",
+      "value": "numeric value as string",
+      "unit": "unit e.g. U/L, mg/dL, %",
+      "status": "Normal OR Elevated OR Low OR High OR Critical",
+      "badge": "badge-normal OR badge-elevated OR badge-severe",
+      "normalRange": "reference range from report e.g. <45",
+      "percent": 50
     }
-  );
+  ],
+  "otherResults": [
+    {
+      "name": "test name",
+      "value": "value with unit",
+      "badge": "badge-normal OR badge-elevated OR badge-severe",
+      "status": "Normal OR Elevated OR Low OR High OR Critical"
+    }
+  ],
+  "diseases": [
+    {
+      "name": "potential condition name",
+      "likelihood": "Low OR Medium OR High",
+      "description": "brief 1-2 sentence explanation based on the test results",
+      "urgency": "Monitor OR Consult Doctor OR Urgent"
+    }
+  ],
+  "nextSteps": "specific actionable recommendations based on the actual results",
+  "specialistType": "type of specialist to consult"
+}`;
+
+  console.log('🤖 Calling Groq API with image...');
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${key}`
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          { type: 'image_url', image_url: { url: `data:${mimeType || 'image/jpeg'};base64,${base64Image}` } }
+        ]
+      }],
+      temperature: 0.1,
+      max_tokens: 2048,
+      response_format: { type: 'json_object' }
+    })
+  });
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(`Vision API ${res.status}: ${err?.error?.message || 'unknown error'}`);
+    console.error('❌ Groq API error:', err);
+    throw new Error(`Groq API ${res.status}: ${err?.error?.message || 'Unknown error'}`);
   }
 
   const data = await res.json();
-  const text = data.responses?.[0]?.fullTextAnnotation?.text || '';
-  if (!text) throw new Error('Vision API returned no text — image may be unreadable');
-  return text;
+  console.log('✅ Groq raw response:', data);
+
+  const raw = data.choices?.[0]?.message?.content;
+  if (!raw) throw new Error('Groq returned empty response');
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const match = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (match) return JSON.parse(match[1]);
+    throw new Error('Could not parse Groq response as JSON');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// GEMINI — shared helper
+// GEMINI — Multimodal image analysis
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * Calls Gemini API with a text prompt and returns parsed JSON.
- * @param {string} prompt
- * @returns {Promise<object>}
- */
-async function callGemini(prompt) {
+async function analyzeImageWithGemini(base64Image, mimeType) {
+  // Use Groq if available, otherwise fall back to Gemini
+  if (CONFIG.GROQ_API_KEY) {
+    return await analyzeImageWithGroq(base64Image, mimeType);
+  }
+
   const key   = CONFIG.GOOGLE_GEMINI_API_KEY;
   const model = CONFIG.GOOGLE_GEMINI_MODEL || 'gemini-1.5-flash';
-  if (!key) throw new Error('GOOGLE_GEMINI_API_KEY not set');
+
+  if (!key) throw new Error('GOOGLE_GEMINI_API_KEY not set in config.js');
+
+  const prompt = `You are an expert medical AI. Carefully read this medical report image and extract all test results.
+
+Return ONLY a valid JSON object with this exact structure (no markdown, no extra text):
+{
+  "summary": "2-3 sentence plain-language summary of the patient's overall health",
+  "status": "e.g. Pre-Diabetic Range / All Normal / Elevated Markers / Critical",
+  "statusBadge": "badge-normal OR badge-elevated OR badge-prediab OR badge-severe",
+  "confidenceScore": 85,
+  "metrics": [
+    {
+      "name": "exact test name from report",
+      "value": "numeric value as string",
+      "unit": "unit e.g. U/L, mg/dL, %",
+      "status": "Normal OR Elevated OR Low OR High OR Critical",
+      "badge": "badge-normal OR badge-elevated OR badge-severe",
+      "normalRange": "reference range from report e.g. <45",
+      "percent": 50
+    }
+  ],
+  "otherResults": [
+    {
+      "name": "test name",
+      "value": "value with unit",
+      "badge": "badge-normal OR badge-elevated OR badge-severe",
+      "status": "Normal OR Elevated OR Low OR High OR Critical"
+    }
+  ],
+  "diseases": [
+    {
+      "name": "potential condition name",
+      "likelihood": "Low OR Medium OR High",
+      "description": "brief 1-2 sentence explanation based on the test results",
+      "urgency": "Monitor OR Consult Doctor OR Urgent"
+    }
+  ],
+  "nextSteps": "specific actionable recommendations based on the actual results",
+  "specialistType": "type of specialist to consult"
+}
+
+Rules:
+- Extract REAL values from the image, do not make up numbers
+- For the percent field: calculate how far the value is into the abnormal range (0=normal, 100=severely abnormal)
+- If a value is critically abnormal (like SGPT 2201 U/L when normal is <45), set badge to badge-severe
+- List diseases/conditions that these results suggest`;
+
+  console.log('🤖 Calling Gemini with image...');
 
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
@@ -70,31 +168,38 @@ async function callGemini(prompt) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inline_data: { mime_type: mimeType || 'image/jpeg', data: base64Image } }
+          ]
+        }],
         generationConfig: {
-          temperature: 0.2,       // low temp = consistent, factual output
+          temperature: 0.1,
           maxOutputTokens: 2048,
-          responseMimeType: 'application/json', // ask Gemini to return JSON directly
+          responseMimeType: 'application/json'
         },
         safetySettings: [
           { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_MEDICAL',           threshold: 'BLOCK_NONE' },
-        ],
-      }),
+          { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' }
+        ]
+      })
     }
   );
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(`Gemini API ${res.status}: ${err?.error?.message || 'unknown error'}`);
+    console.error('❌ Gemini API error:', err);
+    throw new Error(`Gemini API ${res.status}: ${err?.error?.message || 'Unknown error'}`);
   }
 
   const data = await res.json();
-  const raw  = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  console.log('✅ Gemini raw response:', data);
 
+  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!raw) throw new Error('Gemini returned empty response');
 
-  // Parse — handle both raw JSON and markdown-fenced responses
+  // Parse JSON — handle both raw and markdown-fenced
   try {
     return JSON.parse(raw);
   } catch {
@@ -105,112 +210,47 @@ async function callGemini(prompt) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// REPORT ANALYSIS  (Vision OCR → Gemini)
+// EXPORT: analyzeReport
 // ═══════════════════════════════════════════════════════════════════════════
 
-export async function analyzeReport(fileBase64, mimeType) {
-  console.log('🔍 Starting report analysis...');
-  console.log('📊 API Keys configured:', {
-    vision: !!CONFIG.GOOGLE_VISION_API_KEY,
-    gemini: !!CONFIG.GOOGLE_GEMINI_API_KEY
-  });
+export async function analyzeReport(base64Image, mimeType) {
+  console.log('🏥 MediScan: Starting report analysis...');
 
-  // Demo mode — no keys configured
-  if (!CONFIG.GOOGLE_VISION_API_KEY && !CONFIG.GOOGLE_GEMINI_API_KEY) {
-    console.warn('⚠️ No Google API keys configured — using mock data.');
-    const mock = { ...MOCK_ANALYSIS, analysisDate: new Date().toISOString() };
+  if (!CONFIG.GROQ_API_KEY && !CONFIG.GOOGLE_GEMINI_API_KEY) {
+    console.warn('⚠️ No API key configured — showing error');
+    const mock = { ...MOCK_ANALYSIS, analysisDate: new Date().toISOString(), source: 'fallback_mock' };
     saveData('analysisResult', mock);
     return mock;
   }
 
   try {
-    // ── Step 1: OCR ────────────────────────────────────────────────────────
-    let reportText = '';
-    if (CONFIG.GOOGLE_VISION_API_KEY) {
-      console.info('🔍 Running Google Vision OCR…');
-      console.log('📝 Vision API Key (first 10 chars):', CONFIG.GOOGLE_VISION_API_KEY.substring(0, 10) + '...');
-      reportText = await ocrWithGoogleVision(fileBase64);
-      console.info(`✅ OCR complete — ${reportText.length} characters extracted`);
-      console.log('📄 Extracted text preview:', reportText.substring(0, 200) + '...');
-    }
-
-    if (!CONFIG.GOOGLE_GEMINI_API_KEY) {
-      throw new Error('GOOGLE_GEMINI_API_KEY not set — cannot analyse report');
-    }
-
-    // ── Step 2: Gemini analysis ────────────────────────────────────────────
-    console.info('🤖 Running Gemini analysis…');
-    console.log('🔑 Gemini API Key (first 10 chars):', CONFIG.GOOGLE_GEMINI_API_KEY.substring(0, 10) + '...');
-    const prompt = reportText
-      ? `You are a medical report analyst AI. The following text was extracted via OCR from a medical report.
-
-EXTRACTED REPORT TEXT:
----
-${reportText}
----
-
-Carefully analyze this medical report. Return ONLY a valid JSON object (no markdown, no explanation) with this exact structure:
-{
-  "summary": "2-3 sentence plain-language summary of the overall health picture",
-  "status": "overall status label e.g. Pre-Diabetic Range / All Normal / Elevated Markers",
-  "statusBadge": "badge-normal OR badge-elevated OR badge-prediab OR badge-severe",
-  "confidenceScore": 0-100,
-  "metrics": [
-    {
-      "name": "test name",
-      "value": "numeric value as string",
-      "unit": "unit of measurement",
-      "status": "Normal / Elevated / Low / High / Critical",
-      "badge": "badge-normal OR badge-elevated OR badge-severe",
-      "normalRange": "reference range string",
-      "percent": 0-100
-    }
-  ],
-  "otherResults": [
-    { "name": "test name", "value": "value string", "badge": "badge-normal OR badge-elevated OR badge-severe", "status": "status string" }
-  ],
-  "nextSteps": "specific actionable recommendations based on the results",
-  "specialistType": "type of specialist to consult if needed"
-}`
-      : `You are a medical report analyst AI. Analyze this medical report and return ONLY a valid JSON object with this structure:
-{
-  "summary": "2-3 sentence plain-language summary",
-  "status": "overall status label",
-  "statusBadge": "badge-normal OR badge-elevated OR badge-prediab OR badge-severe",
-  "confidenceScore": 0-100,
-  "metrics": [
-    { "name": "string", "value": "string", "unit": "string", "status": "string", "badge": "badge-normal OR badge-elevated OR badge-severe", "normalRange": "string", "percent": 0-100 }
-  ],
-  "otherResults": [
-    { "name": "string", "value": "string", "badge": "badge-normal OR badge-elevated OR badge-severe", "status": "string" }
-  ],
-  "nextSteps": "string",
-  "specialistType": "string"
-}`;
-
-    const result = await callGemini(prompt);
+    const result = await analyzeImageWithGemini(base64Image, mimeType);
     result.analysisDate = new Date().toISOString();
+    result.source = 'ai_analysis';
+    console.log('✅ Analysis complete:', result);
     saveData('analysisResult', result);
     return result;
 
   } catch (err) {
-    console.error('Report analysis failed:', err);
-    const mock = { ...MOCK_ANALYSIS, analysisDate: new Date().toISOString() };
+    console.error('❌ Analysis failed:', err.message);
+    const mock = { ...MOCK_ANALYSIS, analysisDate: new Date().toISOString(), source: 'fallback_mock', _error: err.message };
     saveData('analysisResult', mock);
     return mock;
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SYMPTOM ANALYSIS  (Gemini text only — no OCR)
+// EXPORT: analyzeSymptoms
 // ═══════════════════════════════════════════════════════════════════════════
 
 export async function analyzeSymptoms(symptoms, bodyAreas, severity, duration) {
-  if (!CONFIG.GOOGLE_GEMINI_API_KEY) {
+  const key   = CONFIG.GOOGLE_GEMINI_API_KEY;
+  const model = CONFIG.GOOGLE_GEMINI_MODEL || 'gemini-1.5-flash';
+
+  if (!key) {
     console.warn('No Gemini API key — using mock symptom data.');
-    const mock = { ...MOCK_SYMPTOM_RESULT };
-    saveData('symptomResult', mock);
-    return mock;
+    saveData('symptomResult', MOCK_SYMPTOM_RESULT);
+    return MOCK_SYMPTOM_RESULT;
   }
 
   try {
@@ -222,45 +262,66 @@ PATIENT REPORT:
 - Severity: ${severity}/10
 - Duration: ${duration || 'Not specified'}
 
-Provide a careful, responsible symptom assessment. Return ONLY a valid JSON object (no markdown, no explanation):
+Return ONLY a valid JSON object (no markdown):
 {
   "urgency": "low OR medium OR high",
-  "urgencyTitle": "short title e.g. ✅ Low Severity — Self-Care May Suffice",
-  "urgencyDesc": "1-2 sentence explanation of urgency level",
+  "urgencyTitle": "e.g. ✅ Low Severity — Self-Care May Suffice",
+  "urgencyDesc": "1-2 sentence explanation",
   "conditions": [
     {
       "name": "condition name",
       "match": 0-100,
-      "description": "2-3 sentence plain-language description",
-      "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3", "recommendation 4"]
+      "description": "2-3 sentence description",
+      "recommendations": ["rec 1", "rec 2", "rec 3", "rec 4"]
     }
   ],
-  "specialistType": "type of doctor to see if needed",
+  "specialistType": "type of doctor",
   "isUrgent": true OR false
 }
 
-Return 2-4 possible conditions ordered by likelihood. Always recommend professional medical consultation.`;
+Return 2-4 conditions ordered by likelihood. Always recommend professional consultation.`;
 
-    const result = await callGemini(prompt);
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 1024, responseMimeType: 'application/json' },
+          safetySettings: [
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' }
+          ]
+        })
+      }
+    );
+
+    if (!res.ok) throw new Error(`Gemini ${res.status}`);
+
+    const data   = await res.json();
+    const raw    = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    let result;
+    try { result = JSON.parse(raw); }
+    catch { const m = raw.match(/```(?:json)?\s*([\s\S]*?)```/); result = JSON.parse(m[1]); }
+
     saveData('symptomResult', result);
     return result;
 
   } catch (err) {
     console.error('Symptom analysis failed:', err);
-    const mock = { ...MOCK_SYMPTOM_RESULT };
-    saveData('symptomResult', mock);
-    return mock;
+    saveData('symptomResult', MOCK_SYMPTOM_RESULT);
+    return MOCK_SYMPTOM_RESULT;
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// LOCAL DEMO FALLBACK (no API keys required)
+// EXPORT: generateSymptomResult (local fallback)
 // ═══════════════════════════════════════════════════════════════════════════
 
 export function generateSymptomResult(data) {
   const painLevel = data?.painLevel || 0;
   const symptoms  = data?.symptoms  || [];
-
   const hasSevere = symptoms.some(s =>
     ['Chest Pain', 'Shortness of Breath', 'Blurred Vision', 'Numbness'].includes(s)
   );
@@ -272,7 +333,7 @@ export function generateSymptomResult(data) {
     urgencyTitle: isHigh   ? '⚠️ High Severity — Seek Medical Attention'
                 : isMedium ? '⚡ Moderate Severity — Monitor Closely'
                 :            '✅ Low Severity — Self-Care May Suffice',
-    urgencyDesc:  isHigh
+    urgencyDesc: isHigh
       ? 'Your symptoms indicate a potentially serious condition. Seek medical attention promptly.'
       : isMedium
       ? 'Your symptoms warrant attention. Consider scheduling an appointment soon.'
@@ -280,18 +341,13 @@ export function generateSymptomResult(data) {
     conditions: [
       {
         name: 'Viral Infection / Flu', match: 72,
-        description: 'Common viral infections cause fatigue, headache, body aches, and mild fever. Usually resolves within 1–2 weeks with rest and hydration.',
-        recommendations: ['Rest and stay hydrated', 'Take OTC pain relievers as needed', 'Monitor temperature', 'See a doctor if symptoms worsen after 3 days'],
+        description: 'Common viral infections cause fatigue, headache, and body aches. Usually resolves in 1–2 weeks.',
+        recommendations: ['Rest and stay hydrated', 'Take OTC pain relievers', 'Monitor temperature', 'See a doctor if symptoms worsen'],
       },
       {
         name: 'Tension Headache', match: 58,
-        description: 'Tension headaches are caused by stress, poor posture, or eye strain — presenting as dull, constant pressure around the head.',
-        recommendations: ['Practice stress management', 'Take regular screen breaks', 'Apply warm compress to neck', 'Consider OTC pain relief'],
-      },
-      {
-        name: 'Vitamin D Deficiency', match: 45,
-        description: 'Low Vitamin D causes fatigue, muscle weakness, and general discomfort — common in people with limited sun exposure.',
-        recommendations: ['Get blood work to check Vitamin D', 'Consider supplementation', 'Increase safe sun exposure', 'Eat Vitamin D-rich foods'],
+        description: 'Caused by stress or poor posture — dull, constant pressure around the head.',
+        recommendations: ['Practice stress management', 'Take screen breaks', 'Apply warm compress', 'Consider OTC pain relief'],
       },
     ],
   };

@@ -3,26 +3,42 @@
  */
 
 import { renderStepIndicator } from './nav.js';
-import { loadData, formatDate, MOCK_ANALYSIS } from './utils.js';
+import { loadData, formatDate } from './utils.js';
 
 // ─── Render step indicator ─────────────────────────────────────────────────
 renderStepIndicator('#step-indicator', ['Upload', 'Analysis', 'Navigator'], 2);
 
 // ─── Load analysis data ────────────────────────────────────────────────────
-const result = loadData('analysisResult') || MOCK_ANALYSIS;
-const isDemo = !loadData('analysisResult');
+const stored = loadData('analysisResult');
 
-// Show demo notice if using mock data
-if (isDemo) {
-  const notice = document.createElement('div');
-  notice.className = 'alert alert-info';
-  notice.style.cssText = 'margin:1rem 0 0;';
-  notice.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-    <div><strong>Demo Mode:</strong> Showing sample analysis. <a href="upload.html">Upload a real report</a> to see your results.</div>
-  `;
-  document.querySelector('.container')?.prepend(notice);
+// If no real result or it's a fallback, redirect back to upload
+if (!stored || stored.source === 'mock_data' || stored.source === 'fallback_mock') {
+  const container = document.querySelector('.container');
+
+  // Show error card instead of fake data
+  if (container) {
+    container.innerHTML = `
+      <div class="card" style="max-width:520px;margin:4rem auto;text-align:center;padding:2.5rem">
+        <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
+        <h2 style="margin-bottom:0.75rem">Analysis Failed</h2>
+        <p style="color:var(--color-muted);margin-bottom:0.5rem">
+          ${stored?._error
+            ? `Error: <strong>${stored._error}</strong>`
+            : 'No analysis result found.'}
+        </p>
+        <p style="color:var(--color-muted);margin-bottom:1.5rem;font-size:0.875rem">
+          Make sure your Gemini API key is valid and the Generative Language API is enabled in your Google Cloud project.
+        </p>
+        <a href="upload.html" class="btn btn-primary">Try Again</a>
+      </div>
+    `;
+  }
+
+  // Stop further rendering
+  throw new Error('No real analysis result — stopped rendering.');
 }
+
+const result = stored;
 
 // ─── Populate Insight Card ─────────────────────────────────────────────────
 const statusBadge = document.getElementById('statusBadge');
@@ -71,6 +87,36 @@ if (result.otherResults && result.otherResults.length) {
       <td><span class="badge ${r.badge || 'badge-neutral'}">${r.status}</span></td>
     </tr>
   `).join('');
+}
+
+// ─── Populate Disease Detection ────────────────────────────────────────────
+if (result.diseases && result.diseases.length) {
+  const diseaseSection = document.createElement('section');
+  diseaseSection.className = 'analysis-other';
+  diseaseSection.innerHTML = `
+    <h3 class="analysis-section-title">Disease Detection</h3>
+    <div class="metrics-grid">
+      ${result.diseases.map(d => {
+        const badge = d.likelihood === 'High' ? 'badge-severe'
+                    : d.likelihood === 'Medium' ? 'badge-elevated'
+                    : 'badge-normal';
+        const urgencyBadge = d.urgency === 'Urgent' ? 'badge-severe'
+                           : d.urgency === 'Consult Doctor' ? 'badge-elevated'
+                           : 'badge-normal';
+        return `
+          <div class="metric-card">
+            <p class="metric-card__name">${d.name}</p>
+            <div class="metric-card__badge" style="margin:0.4rem 0">
+              <span class="badge ${badge}">Likelihood: ${d.likelihood}</span>
+            </div>
+            <p class="metric-card__range" style="margin-bottom:0.5rem">${d.description}</p>
+            <span class="badge ${urgencyBadge}">${d.urgency}</span>
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+  // Insert before the CTA banner
+  document.querySelector('.analysis-cta')?.insertAdjacentElement('beforebegin', diseaseSection);
 }
 
 // ─── Populate Sidebar ──────────────────────────────────────────────────────
