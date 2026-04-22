@@ -168,7 +168,7 @@
   <script src="../config.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script type="module">
-    import { signUp, signInWithGoogle, signInWithGitHub, isLoggedIn, _redirectAfterLogin } from '../js/auth.js';
+    import { signUp, signInWithGoogle, isLoggedIn, _redirectAfterLogin } from '../js/auth.js';
 
     if (isLoggedIn()) _redirectAfterLogin();
 
@@ -279,7 +279,9 @@
         showAlert(err.message || 'Google sign-in failed.');
       }
     });
-    document.getElementById('githubBtn').addEventListener('click', () => signInWithGitHub());
+    document.getElementById('githubBtn').addEventListener('click', () => {
+      alert('GitHub sign-in coming soon!');
+    });
   </script>
 
 </body>

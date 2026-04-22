@@ -136,7 +136,7 @@
   <!-- Google Identity Services (optional — only needed if GOOGLE_CLIENT_ID is set) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script type="module">
-    import { signIn, signInWithGoogle, signInWithGitHub, isLoggedIn, _redirectAfterLogin } from '../js/auth.js';
+    import { signIn, signInWithGoogle, isLoggedIn, _redirectAfterLogin } from '../js/auth.js';
 
     // Already logged in → redirect
     if (isLoggedIn()) _redirectAfterLogin();
@@ -207,7 +207,9 @@
         showAlert(err.message || 'Google sign-in failed.');
       }
     });
-    document.getElementById('githubBtn').addEventListener('click', () => signInWithGitHub());
+    document.getElementById('githubBtn').addEventListener('click', () => {
+      alert('GitHub sign-in coming soon!');
+    });
   </script>
 
 </body>
