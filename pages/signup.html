@@ -231,7 +231,7 @@
     });
 
     // ── Form submit ───────────────────────────────────────────────────────────
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideAlert();
       ['signupNameErr', 'signupEmailErr', 'signupPasswordErr', 'signupConfirmErr', 'signupTermsErr']
@@ -262,19 +262,23 @@
       if (!valid) return;
 
       setLoading(true);
-      setTimeout(() => {
-        const result = signUp({ name, email, password });
-        setLoading(false);
-        if (result.ok) {
-          _redirectAfterLogin();
-        } else {
-          showAlert(result.error);
-        }
-      }, 400);
+      const result = await signUp({ name, email, password });
+      setLoading(false);
+      if (result.ok) {
+        _redirectAfterLogin();
+      } else {
+        showAlert(result.error);
+      }
     });
 
     // ── OAuth ─────────────────────────────────────────────────────────────────
-    document.getElementById('googleBtn').addEventListener('click', () => signInWithGoogle());
+    document.getElementById('googleBtn').addEventListener('click', async () => {
+      try {
+        await signInWithGoogle();
+      } catch (err) {
+        showAlert(err.message || 'Google sign-in failed.');
+      }
+    });
     document.getElementById('githubBtn').addEventListener('click', () => signInWithGitHub());
   </script>
 

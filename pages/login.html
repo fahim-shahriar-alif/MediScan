@@ -172,7 +172,7 @@
     });
 
     // ── Form submit ───────────────────────────────────────────────────────────
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideAlert();
       fieldError('loginEmailErr', '');
@@ -180,7 +180,6 @@
 
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
-      const remember = document.getElementById('rememberMe').checked;
 
       let valid = true;
       if (!email) { fieldError('loginEmailErr', 'Email is required.'); valid = false; }
@@ -191,20 +190,23 @@
       if (!valid) return;
 
       setLoading(true);
-      // Small delay for UX feel
-      setTimeout(() => {
-        const result = signIn({ email, password, remember });
-        setLoading(false);
-        if (result.ok) {
-          _redirectAfterLogin();
-        } else {
-          showAlert(result.error);
-        }
-      }, 400);
+      const result = await signIn({ email, password });
+      setLoading(false);
+      if (result.ok) {
+        _redirectAfterLogin();
+      } else {
+        showAlert(result.error);
+      }
     });
 
     // ── OAuth ─────────────────────────────────────────────────────────────────
-    document.getElementById('googleBtn').addEventListener('click', () => signInWithGoogle());
+    document.getElementById('googleBtn').addEventListener('click', async () => {
+      try {
+        await signInWithGoogle();
+      } catch (err) {
+        showAlert(err.message || 'Google sign-in failed.');
+      }
+    });
     document.getElementById('githubBtn').addEventListener('click', () => signInWithGitHub());
   </script>
 
