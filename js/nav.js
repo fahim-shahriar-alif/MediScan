@@ -77,6 +77,10 @@ const pages   = inPages ? '' : 'pages/';
           </div>
         </div>
         <div class="profile-dropdown__divider"></div>
+        <a class="profile-dropdown__item" href="${pages}profile.html" role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          My Profile
+        </a>
         <a class="profile-dropdown__item" href="${pages}health-history.html" role="menuitem">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           Health History
@@ -113,11 +117,18 @@ const pages   = inPages ? '' : 'pages/';
   document.addEventListener('click', close);
   dropdown.addEventListener('click', (e) => e.stopPropagation());
 
-  document.getElementById('profileSignOut').addEventListener('click', () => {
-    localStorage.removeItem('mediscan_user');
-    localStorage.removeItem('mediscan_session');
-    sessionStorage.removeItem('mediscan_session_only');
-    window.location.href = `${root}pages/login.html`;
+  document.getElementById('profileSignOut').addEventListener('click', async () => {
+    // Sign out from Firebase first
+    try {
+      const { signOut } = await import('./auth.js');
+      await signOut(`${root}pages/login.html`);
+    } catch (err) {
+      // Fallback: clear manually
+      localStorage.removeItem('mediscan_user');
+      localStorage.removeItem('mediscan_session');
+      sessionStorage.removeItem('mediscan_session_only');
+      window.location.href = `${root}pages/login.html`;
+    }
   });
 })();
 

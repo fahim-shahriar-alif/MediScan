@@ -40,14 +40,21 @@ export function isLoggedIn() {
 // ─── Map Firebase user → app user ──────────────────────────────────────────
 
 function mapUser(firebaseUser) {
-  const name = firebaseUser.displayName || firebaseUser.email.split('@')[0];
+  // Priority: displayName → email prefix → 'User'
+  const rawName = firebaseUser.displayName
+    || firebaseUser.email?.split('@')[0]?.replace(/[._]/g, ' ')
+    || 'User';
+
+  // Capitalize each word
+  const name = rawName.replace(/\b\w/g, c => c.toUpperCase());
+
   return {
-    id:       firebaseUser.uid,
+    id:        firebaseUser.uid,
     name,
-    email:    firebaseUser.email,
-    avatar:   firebaseUser.photoURL || null,
-    initials: name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
-    provider: firebaseUser.providerData?.[0]?.providerId || 'email',
+    email:     firebaseUser.email,
+    avatar:    firebaseUser.photoURL || null,
+    initials:  name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+    provider:  firebaseUser.providerData?.[0]?.providerId || 'email',
     createdAt: firebaseUser.metadata?.creationTime || new Date().toISOString(),
   };
 }
@@ -58,6 +65,7 @@ onAuthStateChanged(auth, (firebaseUser) => {
   if (firebaseUser) {
     setUser(mapUser(firebaseUser));
   } else {
+    // Firebase says no user — clear localStorage too
     clearUser();
   }
 });
@@ -105,8 +113,16 @@ export async function signUp({ name, email, password }) {
 // ─── Sign Out ───────────────────────────────────────────────────────────────
 
 export async function signOut(redirectTo = '../index.html') {
-  await firebaseSignOut(auth);
+  try {
+    await firebaseSignOut(auth);
+  } catch (err) {
+    console.error('Firebase signout error:', err);
+  }
   clearUser();
+  // Clear all mediscan data from localStorage
+  Object.keys(localStorage)
+    .filter(k => k.startsWith('mediscan'))
+    .forEach(k => localStorage.removeItem(k));
   window.location.href = redirectTo;
 }
 

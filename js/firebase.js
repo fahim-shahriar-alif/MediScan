@@ -13,6 +13,18 @@ import {
   onAuthStateChanged,
   updateProfile,
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  setDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  serverTimestamp,
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey:            'AIzaSyDzOEZEaSzws_u909SrLluWaehQBRr1PGE',
@@ -24,13 +36,13 @@ const firebaseConfig = {
   measurementId:     'G-Y5NRTGXZYS',
 };
 
-const app      = initializeApp(firebaseConfig);
-const auth     = getAuth(app);
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
 export {
-  auth,
-  provider,
+  auth, db, provider,
   GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
@@ -38,4 +50,14 @@ export {
   firebaseSignOut,
   onAuthStateChanged,
   updateProfile,
+  // Firestore
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  setDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  serverTimestamp,
 };

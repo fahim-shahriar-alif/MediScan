@@ -9,6 +9,11 @@
 
 import { saveData, MOCK_ANALYSIS, MOCK_SYMPTOM_RESULT } from './utils.js';
 
+// Lazy import db to avoid circular deps
+async function getDb() {
+  try { return await import('./db.js'); } catch { return null; }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // GROQ — Multimodal image analysis (free alternative to Gemini)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -233,6 +238,14 @@ export async function analyzeReport(base64Image, mimeType) {
     result.source = 'ai_analysis';
     console.log('✅ Analysis complete:', result);
     saveData('analysisResult', result);
+
+    // Save to Firestore
+    const dbModule = await getDb();
+    if (dbModule) {
+      const fileName = localStorage.getItem('uploadedFileName') || 'report';
+      await dbModule.saveAnalysis(result, fileName);
+    }
+
     return result;
 
   } catch (err) {
@@ -310,6 +323,11 @@ Return 2-4 conditions ordered by likelihood. Always recommend professional consu
       const raw  = data.choices?.[0]?.message?.content;
       const result = JSON.parse(raw);
       saveData('symptomResult', result);
+
+      // Save to Firestore
+      const dbModule = await getDb();
+      if (dbModule) await dbModule.saveSymptomCheck(result, { symptoms, bodyAreas, severity, duration, otherSymptoms, existingConditions });
+
       return result;
     }
 

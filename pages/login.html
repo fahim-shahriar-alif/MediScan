@@ -136,10 +136,31 @@
   <!-- Google Identity Services (optional — only needed if GOOGLE_CLIENT_ID is set) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script type="module">
-    import { signIn, signInWithGoogle, isLoggedIn, _redirectAfterLogin } from '../js/auth.js';
+    let signIn, signInWithGoogle, isLoggedIn, _redirectAfterLogin;
 
-    // Already logged in → redirect
-    if (isLoggedIn()) _redirectAfterLogin();
+    try {
+      const auth = await import('../js/auth.js');
+      signIn = auth.signIn;
+      signInWithGoogle = auth.signInWithGoogle;
+      isLoggedIn = auth.isLoggedIn;
+      _redirectAfterLogin = auth._redirectAfterLogin;
+    } catch (err) {
+      console.error('Auth module failed to load:', err);
+      document.getElementById('authAlert').hidden = false;
+      document.getElementById('authAlert').className = 'auth-alert auth-alert--danger';
+      document.getElementById('authAlert').textContent = 'Authentication service failed to load. Please refresh the page.';
+    }
+
+    if (isLoggedIn?.()) _redirectAfterLogin?.();
+
+    // Also check Firebase auth state in case localStorage is stale
+    try {
+      const { auth } = await import('../js/firebase.js');
+      const { onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+      onAuthStateChanged(auth, (user) => {
+        if (user) _redirectAfterLogin?.();
+      });
+    } catch (_) { }
 
     const form = document.getElementById('loginForm');
     const submitBtn = document.getElementById('loginSubmit');
@@ -190,12 +211,18 @@
       if (!valid) return;
 
       setLoading(true);
-      const result = await signIn({ email, password });
-      setLoading(false);
-      if (result.ok) {
-        _redirectAfterLogin();
-      } else {
-        showAlert(result.error);
+      try {
+        const result = await signIn({ email, password });
+        setLoading(false);
+        if (result.ok) {
+          _redirectAfterLogin();
+        } else {
+          showAlert(result.error);
+        }
+      } catch (err) {
+        setLoading(false);
+        showAlert('Something went wrong. Please try again.');
+        console.error('Login error:', err);
       }
     });
 

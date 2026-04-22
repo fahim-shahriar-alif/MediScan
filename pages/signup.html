@@ -168,9 +168,31 @@
   <script src="../config.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script type="module">
-    import { signUp, signInWithGoogle, isLoggedIn, _redirectAfterLogin } from '../js/auth.js';
+    let signUp, signInWithGoogle, isLoggedIn, _redirectAfterLogin;
 
-    if (isLoggedIn()) _redirectAfterLogin();
+    try {
+      const auth = await import('../js/auth.js');
+      signUp = auth.signUp;
+      signInWithGoogle = auth.signInWithGoogle;
+      isLoggedIn = auth.isLoggedIn;
+      _redirectAfterLogin = auth._redirectAfterLogin;
+    } catch (err) {
+      console.error('Auth module failed to load:', err);
+      document.getElementById('authAlert').hidden = false;
+      document.getElementById('authAlert').className = 'auth-alert auth-alert--danger';
+      document.getElementById('authAlert').textContent = 'Authentication service failed to load. Please refresh the page.';
+    }
+
+    if (isLoggedIn?.()) _redirectAfterLogin?.();
+
+    // Also check Firebase auth state in case localStorage is stale
+    try {
+      const { auth } = await import('../js/firebase.js');
+      const { onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+      onAuthStateChanged(auth, (user) => {
+        if (user) _redirectAfterLogin?.();
+      });
+    } catch (_) { }
 
     const form = document.getElementById('signupForm');
     const submitBtn = document.getElementById('signupSubmit');
@@ -262,12 +284,18 @@
       if (!valid) return;
 
       setLoading(true);
-      const result = await signUp({ name, email, password });
-      setLoading(false);
-      if (result.ok) {
-        _redirectAfterLogin();
-      } else {
-        showAlert(result.error);
+      try {
+        const result = await signUp({ name, email, password });
+        setLoading(false);
+        if (result.ok) {
+          _redirectAfterLogin();
+        } else {
+          showAlert(result.error);
+        }
+      } catch (err) {
+        setLoading(false);
+        showAlert('Something went wrong. Please try again.');
+        console.error('Signup error:', err);
       }
     });
 

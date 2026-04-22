@@ -388,6 +388,21 @@
 
   <script src="config.js"></script>
   <script src="js/nav.js" type="module"></script>
+  <script type="module">
+    // Guard feature links — redirect to login if not authenticated
+    import { isLoggedIn } from './js/auth.js';
+
+    const featureLinks = document.querySelectorAll('a[href*="upload"], a[href*="symptoms"], a[href*="specialists"], a[href*="health-history"]');
+    featureLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        if (!isLoggedIn()) {
+          e.preventDefault();
+          sessionStorage.setItem('mediscan_return_to', link.href);
+          window.location.href = 'pages/login.html';
+        }
+      });
+    });
+  </script>
 
 
 </body>
