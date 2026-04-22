@@ -177,23 +177,43 @@ export const MOCK_HEALTH_HISTORY = [
 
 export const MOCK_SPECIALISTS = [
   {
-    id: 1, name: 'Dr. Amara Patel', specialty: 'Endocrinologist', rating: 4.9, reviews: 312,
+    id: 1, name: 'Dr. Amara Patel', specialty: 'Hepatologist', rating: 4.9, reviews: 312,
     distance: '0.8 mi', address: '123 Health Plaza, Suite 200', phone: '(555) 123-4567',
-    isTopMatch: true,
+    isTopMatch: false,
   },
   {
-    id: 2, name: 'Dr. Michael Torres', specialty: 'Endocrinologist', rating: 4.7, reviews: 245,
+    id: 2, name: 'Dr. Michael Torres', specialty: 'Gastroenterologist', rating: 4.7, reviews: 245,
     distance: '2.1 mi', address: '456 Medical Center Blvd', phone: '(555) 234-5678',
     isTopMatch: false,
   },
   {
-    id: 3, name: 'Dr. Lisa Chang', specialty: 'Internal Medicine', rating: 4.8, reviews: 198,
+    id: 3, name: 'Dr. Lisa Chang', specialty: 'Endocrinologist', rating: 4.8, reviews: 198,
     distance: '1.5 mi', address: '789 Wellness Ave, Floor 3', phone: '(555) 345-6789',
     isTopMatch: false,
   },
   {
-    id: 4, name: 'Dr. Robert Kimani', specialty: 'Diabetologist', rating: 4.6, reviews: 167,
+    id: 4, name: 'Dr. Robert Kimani', specialty: 'Internal Medicine', rating: 4.6, reviews: 167,
     distance: '3.2 mi', address: '321 Care Drive, Building B', phone: '(555) 456-7890',
+    isTopMatch: false,
+  },
+  {
+    id: 5, name: 'Dr. Sarah Chen', specialty: 'Cardiologist', rating: 4.8, reviews: 289,
+    distance: '1.9 mi', address: '567 Heart Center Ave', phone: '(555) 567-8901',
+    isTopMatch: false,
+  },
+  {
+    id: 6, name: 'Dr. James Okafor', specialty: 'Neurologist', rating: 4.7, reviews: 201,
+    distance: '2.8 mi', address: '890 Neuro Blvd, Suite 5', phone: '(555) 678-9012',
+    isTopMatch: false,
+  },
+  {
+    id: 7, name: 'Dr. Priya Sharma', specialty: 'Diabetologist', rating: 4.9, reviews: 334,
+    distance: '1.1 mi', address: '234 Diabetes Care Center', phone: '(555) 789-0123',
+    isTopMatch: false,
+  },
+  {
+    id: 8, name: 'Dr. Ahmed Hassan', specialty: 'General Practitioner', rating: 4.5, reviews: 412,
+    distance: '0.5 mi', address: '12 Family Health Clinic', phone: '(555) 890-1234',
     isTopMatch: false,
   },
 ];

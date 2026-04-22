@@ -319,9 +319,9 @@
   <script src="../js/nav.js" type="module"></script>
   <script type="module">
     import { requireAuth, getUser, signOut } from '../js/auth.js';
-    import { updateProfile } from '../js/firebase.js';
-    import { auth } from '../js/firebase.js';
+    import { auth, onAuthStateChanged, updateProfile } from '../js/firebase.js';
     import { loadData, formatDate } from '../js/utils.js';
+    import { loadHistory, loadAppointments } from '../js/db.js';
 
     requireAuth();
 
@@ -357,15 +357,62 @@
 
     // ── Activity stats ───────────────────────────────────────────────────────
     const analysisResult = loadData('analysisResult');
-    const symptomResult = loadData('symptomResult');
-    const history = JSON.parse(localStorage.getItem('mediscan_health_history') || '[]');
 
-    document.getElementById('statReports').textContent = analysisResult ? '1+' : '0';
-    document.getElementById('statSymptoms').textContent = symptomResult ? '1+' : '0';
-    document.getElementById('statAppointments').textContent = history.filter(h => h.type === 'appointment').length || '0';
-    document.getElementById('statLastAnalysis').textContent = analysisResult?.analysisDate
-      ? new Date(analysisResult.analysisDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      : '—';
+    // Wait for auth then load from Firestore
+    const unsubStats = onAuthStateChanged(auth, async (firebaseUser) => {
+      unsubStats();
+      if (!firebaseUser) return;
+
+      const [history, appointments] = await Promise.all([
+        loadHistory(),
+        loadAppointments()
+      ]);
+
+      const scans = history.filter(h => h.type === 'scan').length;
+      const checks = history.filter(h => h.type === 'check').length;
+
+      document.getElementById('statReports').textContent = scans || '0';
+      document.getElementById('statSymptoms').textContent = checks || '0';
+      document.getElementById('statAppointments').textContent = appointments.length || '0';
+      document.getElementById('statLastAnalysis').textContent = analysisResult?.analysisDate
+        ? new Date(analysisResult.analysisDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : (history.find(h => h.type === 'scan')?.date
+          ? new Date(history.find(h => h.type === 'scan').date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : '—');
+
+      // Show upcoming appointments
+      if (appointments.length > 0) {
+        const apptSection = document.createElement('div');
+        apptSection.className = 'card';
+        apptSection.style.cssText = 'grid-column:1/-1';
+        apptSection.innerHTML = `
+          <h3 class="profile-section-title">Your Appointments</h3>
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            ${appointments.slice(0, 5).map(a => `
+              <div style="display:flex;align-items:center;justify-content:space-between;
+                          padding:0.875rem;background:#F8FAFC;border-radius:10px;
+                          border:1px solid var(--color-border)">
+                <div>
+                  <p style="font-weight:600;color:var(--color-text);margin-bottom:0.125rem">
+                    ${a.doctorName || 'Doctor'}
+                  </p>
+                  <p style="font-size:0.8125rem;color:var(--color-muted)">
+                    ${a.specialty || ''} · 
+                    ${a.date ? new Date(a.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                    ${a.timeLabel ? ' at ' + a.timeLabel : ''}
+                  </p>
+                  ${a.address ? `<p style="font-size:0.75rem;color:var(--color-muted);margin-top:0.125rem">📍 ${a.address}</p>` : ''}
+                </div>
+                <span style="font-size:0.75rem;font-weight:600;padding:0.25rem 0.625rem;
+                             border-radius:999px;background:#DCFCE7;color:#16A34A;white-space:nowrap">
+                  ${a.status || 'Confirmed'}
+                </span>
+              </div>`).join('')}
+          </div>`;
+        // Insert before Quick Actions
+        document.querySelector('.card[style*="grid-column"]')?.insertAdjacentElement('beforebegin', apptSection);
+      }
+    });
 
     // ── Edit name ────────────────────────────────────────────────────────────
     const editBtn = document.getElementById('editBtn');

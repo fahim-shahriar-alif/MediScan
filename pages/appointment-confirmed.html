@@ -80,9 +80,11 @@
   <script src="../js/nav.js" type="module"></script>
   <script type="module">
     import { requireAuth } from '../js/auth.js';
-    requireAuth();
-
+    import { auth, onAuthStateChanged } from '../js/firebase.js';
     import { loadData, formatDate } from '../js/utils.js';
+    import { saveAppointment } from '../js/db.js';
+
+    requireAuth();
 
     const confNum = loadData('confirmationNumber');
     const appt = loadData('appointmentDetails');
@@ -96,6 +98,30 @@
       document.getElementById('confDate').textContent = formatDate(appt.date);
       document.getElementById('confTime').textContent = appt.timeLabel;
       document.getElementById('confLoc').textContent = doc.address;
+
+      // Save to Firestore once auth is ready
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        unsubscribe();
+        if (!user) return;
+
+        // Only save if not already saved (check flag)
+        const alreadySaved = loadData('appointmentSaved_' + confNum);
+        if (alreadySaved) return;
+
+        await saveAppointment({
+          confirmationNumber: confNum,
+          doctorName: doc.name,
+          specialty: doc.specialty,
+          address: doc.address,
+          phone: doc.phone || '',
+          date: appt.date,
+          timeLabel: appt.timeLabel,
+          status: 'confirmed',
+        });
+
+        // Mark as saved to avoid duplicates on refresh
+        localStorage.setItem('appointmentSaved_' + confNum, '1');
+      });
     }
   </script>
 
