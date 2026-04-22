@@ -16,6 +16,10 @@ import { saveData, MOCK_ANALYSIS, MOCK_SYMPTOM_RESULT } from './utils.js';
 async function analyzeImageWithGroq(base64Image, mimeType) {
   const key   = CONFIG.GROQ_API_KEY;
   const model = 'meta-llama/llama-4-scout-17b-16e-instruct';
+  const mime  = mimeType || 'image/jpeg';
+  const dataUrl = base64Image.startsWith('data:')
+    ? base64Image
+    : `data:${mime};base64,${base64Image}`;
 
   const prompt = `You are an expert medical AI. Carefully read this medical report image and extract all test results.
 
@@ -70,7 +74,7 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no extra
         role: 'user',
         content: [
           { type: 'text', text: prompt },
-          { type: 'image_url', image_url: { url: `data:${mimeType || 'image/jpeg'};base64,${base64Image}` } }
+          { type: 'image_url', image_url: { url: dataUrl } }
         ]
       }],
       temperature: 0.1,

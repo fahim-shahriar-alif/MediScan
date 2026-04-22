@@ -32,9 +32,19 @@ export function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
+      // Return just the base64 part (without data:mime;base64, prefix)
       const base64 = reader.result.split(',')[1];
       resolve(base64);
     };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+export function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result); // full data URL
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });

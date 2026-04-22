@@ -4,7 +4,7 @@
  */
 
 import { renderStepIndicator } from './nav.js';
-import { fileToBase64, saveData, navigateTo } from './utils.js';
+import { fileToDataUrl, saveData, navigateTo } from './utils.js';
 import { analyzeReport } from './ai.js';
 
 // ─── Step indicator ────────────────────────────────────────────────────────
@@ -241,7 +241,8 @@ analyzeBtn.addEventListener('click', async () => {
   try {
     const primary  = files[0].file;
     const allNames = files.map(e => e.file.name).join(', ');
-    const base64   = await fileToBase64(primary);
+    const dataUrl  = await fileToDataUrl(primary);
+    const base64   = dataUrl.split(',')[1];
     saveData('uploadedFileName', allNames);
     saveData('uploadedFileCount', files.length);
     await analyzeReport(base64, primary.type);
