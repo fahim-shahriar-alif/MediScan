@@ -160,21 +160,14 @@
       document.body.appendChild(overlay);
 
       try {
-        let result;
-        if (CONFIG.CLAUDE_API_KEY) {
-          // Real AI analysis via Claude
-          result = await analyzeSymptoms(
-            data.symptoms || [],
-            data.areaNames || [],
-            data.painLevel || 0,
-            data.duration || 'Not specified'
-          );
-        } else {
-          // Local demo fallback
-          await new Promise(r => setTimeout(r, 1200));
-          result = generateSymptomResult(data);
-          saveData('symptomResult', result);
-        }
+        const result = await analyzeSymptoms(
+          data.symptoms || [],
+          data.areaNames || [],
+          data.painLevel || 0,
+          data.duration || 'Not specified',
+          data.otherSymptoms || '',
+          data.existingConditions || ''
+        );
         window.location.href = 'symptom-results.html';
       } catch (err) {
         console.error('Analysis error:', err);

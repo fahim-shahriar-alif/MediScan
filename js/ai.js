@@ -247,24 +247,26 @@ export async function analyzeReport(base64Image, mimeType) {
 // EXPORT: analyzeSymptoms
 // ═══════════════════════════════════════════════════════════════════════════
 
-export async function analyzeSymptoms(symptoms, bodyAreas, severity, duration) {
-  const key   = CONFIG.GOOGLE_GEMINI_API_KEY;
-  const model = CONFIG.GOOGLE_GEMINI_MODEL || 'gemini-1.5-flash';
+export async function analyzeSymptoms(symptoms, bodyAreas, severity, duration, otherSymptoms = '', existingConditions = '') {
+  const groqKey  = CONFIG.GROQ_API_KEY;
+  const geminiKey = CONFIG.GOOGLE_GEMINI_API_KEY;
 
-  if (!key) {
-    console.warn('No Gemini API key — using mock symptom data.');
-    saveData('symptomResult', MOCK_SYMPTOM_RESULT);
-    return MOCK_SYMPTOM_RESULT;
+  if (!groqKey && !geminiKey) {
+    console.warn('No API key — using local fallback.');
+    const mock = generateSymptomResult({ symptoms, painLevel: severity });
+    saveData('symptomResult', mock);
+    return mock;
   }
 
-  try {
-    const prompt = `You are a medical AI assistant helping a patient understand their symptoms.
+  const prompt = `You are a medical AI assistant helping a patient understand their symptoms.
 
 PATIENT REPORT:
 - Symptoms: ${symptoms.length ? symptoms.join(', ') : 'Not specified'}
 - Affected body areas: ${bodyAreas.length ? bodyAreas.join(', ') : 'Not specified'}
 - Severity: ${severity}/10
 - Duration: ${duration || 'Not specified'}
+- Additional notes: ${otherSymptoms || 'None'}
+- Pre-existing conditions: ${existingConditions || 'None'}
 
 Return ONLY a valid JSON object (no markdown):
 {
@@ -285,37 +287,58 @@ Return ONLY a valid JSON object (no markdown):
 
 Return 2-4 conditions ordered by likelihood. Always recommend professional consultation.`;
 
+  try {
+    // Use Groq if available
+    if (groqKey) {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${groqKey}`
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.2,
+          max_tokens: 1024,
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (!res.ok) throw new Error(`Groq ${res.status}`);
+      const data = await res.json();
+      const raw  = data.choices?.[0]?.message?.content;
+      const result = JSON.parse(raw);
+      saveData('symptomResult', result);
+      return result;
+    }
+
+    // Fallback to Gemini
+    const model = CONFIG.GOOGLE_GEMINI_MODEL || 'gemini-1.5-flash';
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 1024, responseMimeType: 'application/json' },
-          safetySettings: [
-            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-            { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' }
-          ]
+          generationConfig: { temperature: 0.2, maxOutputTokens: 1024, responseMimeType: 'application/json' }
         })
       }
     );
 
     if (!res.ok) throw new Error(`Gemini ${res.status}`);
-
     const data   = await res.json();
     const raw    = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    let result;
-    try { result = JSON.parse(raw); }
-    catch { const m = raw.match(/```(?:json)?\s*([\s\S]*?)```/); result = JSON.parse(m[1]); }
-
+    const result = JSON.parse(raw);
     saveData('symptomResult', result);
     return result;
 
   } catch (err) {
     console.error('Symptom analysis failed:', err);
-    saveData('symptomResult', MOCK_SYMPTOM_RESULT);
-    return MOCK_SYMPTOM_RESULT;
+    const fallback = generateSymptomResult({ symptoms, painLevel: severity });
+    saveData('symptomResult', fallback);
+    return fallback;
   }
 }
 
