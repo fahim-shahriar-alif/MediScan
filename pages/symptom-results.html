@@ -91,6 +91,7 @@
     // Flag that we're arriving from the symptom flow
     document.getElementById('findSpecialistBtn')?.addEventListener('click', () => {
       sessionStorage.setItem('mediscan_from_flow', '1');
+      sessionStorage.setItem('mediscan_flow_source', 'symptoms');
     });
 
     import { renderStepIndicator } from '../js/nav.js';

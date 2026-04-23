@@ -17,10 +17,17 @@ const symptomData    = loadData('symptomData');
 
 // Only show the AI recommendation banner if the user arrived here by clicking
 // "Find Specialists" from the analysis or symptom-results page.
-const fromFlow = sessionStorage.getItem('mediscan_from_flow') === '1';
-sessionStorage.removeItem('mediscan_from_flow'); // consume immediately
+const fromFlow     = sessionStorage.getItem('mediscan_from_flow') === '1';
+const fromSymptoms = sessionStorage.getItem('mediscan_flow_source') === 'symptoms';
+sessionStorage.removeItem('mediscan_from_flow');
+sessionStorage.removeItem('mediscan_flow_source');
 
 const hasContext = fromFlow && !!(analysisResult || symptomResult);
+
+// Use only the context relevant to the current flow — don't mix old report data
+// into a symptom-only check and vice versa
+const activeAnalysis = fromSymptoms ? null : analysisResult;
+const activeSymptom  = symptomResult;
 
 // ─── Render step indicator only when coming from a flow ───────────────────
 if (hasContext) {
@@ -32,8 +39,8 @@ const recBanner = document.getElementById('recBanner');
 if (!hasContext) {
   recBanner.hidden = true;
 } else {
-  const specialistType = analysisResult?.specialistType
-    || symptomResult?.specialistType
+  const specialistType = activeAnalysis?.specialistType
+    || activeSymptom?.specialistType
     || 'General Practitioner';
   document.getElementById('recText').textContent =
     `Based on your analysis, we recommend consulting a ${specialistType}.`;
@@ -49,14 +56,14 @@ async function getAISpecialistRecommendation() {
 
   // Build context from available data
   const context = [];
-  if (analysisResult?.summary)      context.push(`Medical report: ${analysisResult.summary}`);
-  if (analysisResult?.status)       context.push(`Status: ${analysisResult.status}`);
-  if (analysisResult?.diseases?.length) {
-    context.push(`Detected conditions: ${analysisResult.diseases.map(d => d.name).join(', ')}`);
+  if (activeAnalysis?.summary)      context.push(`Medical report: ${activeAnalysis.summary}`);
+  if (activeAnalysis?.status)       context.push(`Status: ${activeAnalysis.status}`);
+  if (activeAnalysis?.diseases?.length) {
+    context.push(`Detected conditions: ${activeAnalysis.diseases.map(d => d.name).join(', ')}`);
   }
   if (symptomData?.symptoms?.length) context.push(`Symptoms: ${symptomData.symptoms.join(', ')}`);
   if (symptomData?.painLevel)        context.push(`Pain level: ${symptomData.painLevel}/10`);
-  if (symptomResult?.urgency)        context.push(`Urgency: ${symptomResult.urgency}`);
+  if (activeSymptom?.urgency)        context.push(`Urgency: ${activeSymptom.urgency}`);
 
   if (!context.length) return null;
 
