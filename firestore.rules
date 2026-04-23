@@ -20,9 +20,9 @@ service cloud.firestore {
       allow read: if isAdmin();
     }
 
-    // ── Admins collection: users can read their own admin doc ─────────────
+    // ── Admins collection: only admins can read/write ─────────────────────
     match /admins/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAdmin();
       allow write: if isAdmin();
     }
 
