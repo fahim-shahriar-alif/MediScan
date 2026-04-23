@@ -12,6 +12,21 @@ import { saveData, MOCK_ANALYSIS } from './utils.js';
 // CONFIG is set by config.js as window.CONFIG — read it safely
 const CONFIG = window.CONFIG || {};
 
+// ─── User-scoped data helpers ──────────────────────────────────────────────
+function getCurrentUid() {
+  try {
+    const u = JSON.parse(localStorage.getItem('mediscan_user'));
+    return u?.id || 'anonymous';
+  } catch { return 'anonymous'; }
+}
+
+function saveUserData(key, data) {
+  const uid = getCurrentUid();
+  saveData(`${key}_${uid}`, data);
+  // Also save to the generic key for backward compat within the same session
+  saveData(key, data);
+}
+
 // Lazy import db to avoid circular deps
 async function getDb() {
   try { return await import('./db.js'); } catch { return null; }
@@ -137,7 +152,7 @@ export async function analyzeReport(base64Image, mimeType) {
     result.analysisDate = new Date().toISOString();
     result.source = 'ai_analysis';
     console.log('✅ Analysis complete:', result);
-    saveData('analysisResult', result);
+    saveUserData('analysisResult', result);
 
     // Save to Firestore
     const dbModule = await getDb();
@@ -220,7 +235,7 @@ Return 2-4 conditions ordered by likelihood. Always recommend professional consu
       const data = await res.json();
       const raw  = data.choices?.[0]?.message?.content;
       const result = JSON.parse(raw);
-      saveData('symptomResult', result);
+      saveUserData('symptomResult', result);
 
       // Save to Firestore
       const dbModule = await getDb();

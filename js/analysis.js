@@ -8,8 +8,10 @@ import { loadData, formatDate } from './utils.js';
 // ─── Render step indicator ─────────────────────────────────────────────────
 renderStepIndicator('#step-indicator', ['Upload', 'Analysis', 'Navigator'], 2);
 
-// ─── Load analysis data ────────────────────────────────────────────────────
-const stored = loadData('analysisResult');
+// ─── Load analysis data (user-scoped) ─────────────────────────────────────
+const _uid = (() => { try { return JSON.parse(localStorage.getItem('mediscan_user'))?.id || 'anonymous'; } catch { return 'anonymous'; } })();
+const stored = JSON.parse(localStorage.getItem(`analysisResult_${_uid}`) || 'null')
+            || loadData('analysisResult');
 
 // If no real result or it's a fallback, redirect back to upload
 if (!stored || stored.source === 'mock_data' || stored.source === 'fallback_mock') {

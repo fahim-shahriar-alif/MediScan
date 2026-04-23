@@ -11,9 +11,13 @@ import { db, collection, getDocs } from './firebase.js';
 const CONFIG = window.CONFIG || {};
 
 // ─── Load context from previous analysis ──────────────────────────────────
-const analysisResult = loadData('analysisResult');
-const symptomResult  = loadData('symptomResult');
-const symptomData    = loadData('symptomData');
+const _uid = (() => { try { return JSON.parse(localStorage.getItem('mediscan_user'))?.id || 'anonymous'; } catch { return 'anonymous'; } })();
+
+// Read user-scoped data — never show another user's health data
+const analysisResult = JSON.parse(localStorage.getItem(`analysisResult_${_uid}`) || 'null');
+const symptomResult  = JSON.parse(localStorage.getItem(`symptomResult_${_uid}`)  || 'null');
+const symptomData    = JSON.parse(localStorage.getItem(`symptomData_${_uid}`)    || 'null')
+                    || JSON.parse(localStorage.getItem('symptomData') || 'null');
 
 // Only show the AI recommendation banner if the user arrived here by clicking
 // "Find Specialists" from the analysis or symptom-results page.

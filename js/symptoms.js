@@ -143,6 +143,10 @@ analyzeBtn.addEventListener('click', () => {
     otherSymptoms:      document.getElementById('otherSymptoms').value.trim(),
     existingConditions: document.getElementById('existingConditions').value,
   };
+  // Save with user scope
+  let uid = 'anonymous';
+  try { uid = JSON.parse(localStorage.getItem('mediscan_user'))?.id || 'anonymous'; } catch (_) {}
   saveData('symptomData', data);
+  saveData(`symptomData_${uid}`, data);
   window.location.href = 'symptom-confirm.html';
 });

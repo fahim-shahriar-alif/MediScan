@@ -11,13 +11,16 @@
   try { user = JSON.parse(localStorage.getItem('mediscan_user')); } catch (_) {}
   if (!user) return;
 
-  // Load health context
+  // Load health context — only for the current user
   let ctx = {};
   try {
+    const uid = user.id || 'anonymous';
     ctx = {
-      analysis: JSON.parse(localStorage.getItem('analysisResult') || 'null'),
-      symptoms: JSON.parse(localStorage.getItem('symptomResult')  || 'null'),
-      symData:  JSON.parse(localStorage.getItem('symptomData')    || 'null'),
+      // Try user-scoped key first, fall back to generic only if it belongs to this user
+      analysis: JSON.parse(localStorage.getItem(`analysisResult_${uid}`) || 'null'),
+      symptoms: JSON.parse(localStorage.getItem(`symptomResult_${uid}`)  || 'null'),
+      symData:  JSON.parse(localStorage.getItem(`symptomData_${uid}`)    || 'null')
+               || JSON.parse(localStorage.getItem('symptomData') || 'null'),
     };
   } catch (_) {}
 
