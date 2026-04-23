@@ -122,22 +122,41 @@ async function fetchDoctors() {
 function buildSpecialistList(doctorList, aiRec) {
   let list = [...doctorList];
 
-  if (!aiRec?.specialists?.length) return list;
+  // If no AI context, return full list unsorted
+  if (!hasContext || !aiRec?.specialists?.length) return list;
 
-  // Mark top match based on AI primary specialist
-  const primary = aiRec.primarySpecialist?.toLowerCase() || '';
-  list = list.map(doc => ({
-    ...doc,
-    isTopMatch: doc.specialty.toLowerCase().includes(primary) ||
-                primary.includes(doc.specialty.toLowerCase()),
-    aiReason: aiRec.specialists.find(s =>
-      doc.specialty.toLowerCase().includes(s.specialty.toLowerCase()) ||
-      s.specialty.toLowerCase().includes(doc.specialty.toLowerCase())
-    )?.reason || null,
-    urgency: aiRec.specialists.find(s =>
-      doc.specialty.toLowerCase().includes(s.specialty.toLowerCase())
-    )?.urgency || 'Routine'
-  }));
+  // Get all recommended specialty keywords from AI
+  const recommendedSpecialties = [
+    aiRec.primarySpecialist,
+    ...aiRec.specialists.map(s => s.specialty)
+  ].filter(Boolean).map(s => s.toLowerCase());
+
+  // Annotate each doctor
+  list = list.map(doc => {
+    const docSpecialty = doc.specialty.toLowerCase();
+    const matchedSpec = aiRec.specialists.find(s =>
+      docSpecialty.includes(s.specialty.toLowerCase()) ||
+      s.specialty.toLowerCase().includes(docSpecialty)
+    );
+    const isPrimary = recommendedSpecialties.some(s =>
+      docSpecialty.includes(s) || s.includes(docSpecialty)
+    );
+
+    return {
+      ...doc,
+      isTopMatch: isPrimary,
+      aiReason:   matchedSpec?.reason || null,
+      urgency:    matchedSpec?.urgency || (isPrimary ? 'Soon' : 'Routine'),
+      _relevance: isPrimary ? 1 : 0,
+    };
+  });
+
+  // Sort: matching specialists first, then the rest
+  list.sort((a, b) => b._relevance - a._relevance);
+
+  // If we have matching doctors, only show them (+ a "show all" option handled in render)
+  const matched = list.filter(d => d._relevance > 0);
+  return matched.length > 0 ? matched : list;
 
   // Sort: top matches first
   list.sort((a, b) => (b.isTopMatch ? 1 : 0) - (a.isTopMatch ? 1 : 0));
@@ -326,8 +345,27 @@ async function init() {
 
   // Build and render specialist list
   const specialists = buildSpecialistList(doctorList, aiRec);
+  const isFiltered = hasContext && aiRec?.specialists?.length && specialists.length < doctorList.length;
   renderSpecialists(specialists);
   wireSearch();
+
+  // Show "See all doctors" button if we filtered down
+  if (isFiltered) {
+    const showAllWrap = document.createElement('div');
+    showAllWrap.style.cssText = 'text-align:center;margin:-0.5rem 0 1.5rem';
+    showAllWrap.innerHTML = `
+      <p style="font-size:0.875rem;color:var(--color-muted);margin-bottom:0.5rem">
+        Showing ${specialists.length} recommended specialists for your condition
+      </p>
+      <button class="btn btn-ghost btn-sm" id="showAllDoctors">
+        Show all ${doctorList.length} doctors
+      </button>`;
+    document.getElementById('specialistGrid').insertAdjacentElement('afterend', showAllWrap);
+    document.getElementById('showAllDoctors').addEventListener('click', () => {
+      renderSpecialists(buildSpecialistList(doctorList, null));
+      showAllWrap.remove();
+    });
+  }
 }
 
 init();
