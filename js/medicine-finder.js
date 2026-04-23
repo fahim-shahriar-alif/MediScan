@@ -4,6 +4,7 @@
  */
 
 const CONFIG = window.CONFIG || {};
+const API_URL = CONFIG.API_URL || 'https://mediscan-gf5j.onrender.com';
 
 const input      = document.getElementById('medicineInput');
 const searchBtn  = document.getElementById('searchBtn');
@@ -103,50 +104,16 @@ async function processImageFile(file) {
   reader.readAsDataURL(file);
 }
 
-// OCR via Groq vision
+// OCR via server
 async function ocrMedicineName(base64, mimeType) {
-  const key = CONFIG.GROQ_API_KEY;
-  if (!key) throw new Error('No API key configured.');
-
-  const mime    = mimeType || 'image/jpeg';
-  const dataUrl = `data:${mime};base64,${base64}`;
-
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${key}`
-    },
-    body: JSON.stringify({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: `Look at this medicine packaging image. Extract ONLY the primary medicine/brand name printed on it.
-Return ONLY a JSON object: { "medicineName": "extracted name here" }
-If you cannot find a medicine name, return: { "medicineName": null }
-Do not include dosage numbers, manufacturer names, or extra text — just the medicine name.`
-          },
-          { type: 'image_url', image_url: { url: dataUrl } }
-        ]
-      }],
-      temperature: 0.1,
-      max_tokens: 64,
-      response_format: { type: 'json_object' }
-    })
+  const res  = await fetch(`${API_URL}/api/ocr`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ image: base64, mimeType }),
   });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `API error ${res.status}`);
-  }
-
   const data = await res.json();
-  const raw  = data.choices?.[0]?.message?.content;
-  const parsed = JSON.parse(raw || '{}');
-  return parsed.medicineName || null;
+  if (!data.ok) throw new Error(data.error || 'OCR failed');
+  return data.medicineName || null;
 }
 
 // ─── Quick-search chips ────────────────────────────────────────────────────
@@ -180,8 +147,15 @@ async function search() {
 
 // ─── Groq API call ─────────────────────────────────────────────────────────
 async function findGenericMedicine(medicineName) {
-  const key = CONFIG.GROQ_API_KEY;
-  if (!key) throw new Error('No API key configured.');
+  const res  = await fetch(`${API_URL}/api/medicine`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ medicineName }),
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || 'Server error');
+  return data.result;
+}
 
   const prompt = `You are a pharmaceutical expert. The user is asking about the medicine: "${medicineName}".
 

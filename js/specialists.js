@@ -8,7 +8,8 @@ import { isLoggedIn } from './auth.js';
 import { db, collection, getDocs } from './firebase.js';
 
 // CONFIG is set by config.js as window.CONFIG — read it safely
-const CONFIG = window.CONFIG || {};
+const CONFIG  = window.CONFIG || {};
+const API_URL = CONFIG.API_URL || 'https://mediscan-gf5j.onrender.com';
 
 // ─── Load context from previous analysis ──────────────────────────────────
 const _uid = (() => { try { return JSON.parse(localStorage.getItem('mediscan_user'))?.id || 'anonymous'; } catch { return 'anonymous'; } })();
@@ -54,13 +55,8 @@ if (!hasContext) {
 
 // ─── AI Specialist Recommendation ─────────────────────────────────────────
 async function getAISpecialistRecommendation() {
-  // Skip if user has no analysis/symptom context
   if (!hasContext) return null;
 
-  const key = CONFIG.GROQ_API_KEY;
-  if (!key) return null;
-
-  // Build context from available data
   const context = [];
   if (activeAnalysis?.summary)      context.push(`Medical report: ${activeAnalysis.summary}`);
   if (activeAnalysis?.status)       context.push(`Status: ${activeAnalysis.status}`);
@@ -95,24 +91,17 @@ Return ONLY a valid JSON object:
 Return 2-4 specialists ordered by priority. Be specific and medically accurate.`;
 
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key}`
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+    const res = await fetch(`${API_URL}/api/chat`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.2,
-        max_tokens: 512,
-        response_format: { type: 'json_object' }
-      })
+        systemPrompt: 'You are a medical AI. Return only valid JSON.',
+      }),
     });
-
-    if (!res.ok) throw new Error(`Groq ${res.status}`);
+    if (!res.ok) throw new Error(`Server ${res.status}`);
     const data = await res.json();
-    return JSON.parse(data.choices?.[0]?.message?.content);
+    return JSON.parse(data.reply);
   } catch (err) {
     console.error('AI specialist recommendation failed:', err);
     return null;

@@ -3,3 +3,5 @@ config.js
 .vscode/
 .DS_Store
 MD/
+server/.env
+server/node_modules/

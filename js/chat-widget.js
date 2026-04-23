@@ -4,7 +4,8 @@
  */
 
 (function () {
-  const CONFIG = window.CONFIG || {};
+  const CONFIG  = window.CONFIG || {};
+  const API_URL = CONFIG.API_URL || 'https://mediscan-gf5j.onrender.com';
 
   // Only show if logged in
   let user = null;
@@ -248,24 +249,15 @@
   }
 
   async function callGroq() {
-    const key = CONFIG.GROQ_API_KEY;
-    if (!key) throw new Error('No API key configured.');
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'system', content: systemPrompt }, ...messages.slice(-8)],
-        temperature: 0.5,
-        max_tokens: 400,
-      })
+    const res = await fetch(`${API_URL}/api/chat`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ messages: messages.slice(-8), systemPrompt }),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `API ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
     const data = await res.json();
-    return data.choices?.[0]?.message?.content || 'Sorry, no response.';
+    if (!data.ok) throw new Error(data.error || 'Server error');
+    return data.reply;
   }
 
   inputEl.addEventListener('input', () => {

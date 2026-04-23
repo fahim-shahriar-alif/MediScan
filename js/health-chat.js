@@ -3,7 +3,8 @@
  * Context-aware chat using the user's latest analysis and symptom data.
  */
 
-const CONFIG = window.CONFIG || {};
+const CONFIG  = window.CONFIG || {};
+const API_URL = CONFIG.API_URL || 'https://mediscan-gf5j.onrender.com';
 
 // ─── Load user health context ──────────────────────────────────────────────
 function loadContext() {
@@ -231,36 +232,15 @@ async function sendMessage() {
 
 // ─── Groq API ──────────────────────────────────────────────────────────────
 async function callGroq() {
-  const key = CONFIG.GROQ_API_KEY;
-  if (!key) throw new Error('No API key configured.');
-
-  // Keep last 10 messages to stay within token limits
-  const history = messages.slice(-10);
-
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${key}`
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...history
-      ],
-      temperature: 0.5,
-      max_tokens: 512,
-    })
+  const res = await fetch(`${API_URL}/api/chat`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ messages: messages.slice(-10), systemPrompt }),
   });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `API error ${res.status}`);
-  }
-
+  if (!res.ok) throw new Error(`Server error ${res.status}`);
   const data = await res.json();
-  return data.choices?.[0]?.message?.content || 'Sorry, I could not generate a response.';
+  if (!data.ok) throw new Error(data.error || 'Server error');
+  return data.reply;
 }
 
 // ─── Input auto-resize ─────────────────────────────────────────────────────
