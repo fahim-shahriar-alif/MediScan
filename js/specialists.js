@@ -91,17 +91,14 @@ Return ONLY a valid JSON object:
 Return 2-4 specialists ordered by priority. Be specific and medically accurate.`;
 
   try {
-    const res = await fetch(`${API_URL}/api/chat`, {
+    const res = await fetch(`${API_URL}/api/specialists`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        messages: [{ role: 'user', content: prompt }],
-        systemPrompt: 'You are a medical AI. Return only valid JSON.',
-      }),
+      body:    JSON.stringify({ context: context.join('\n') }),
     });
     if (!res.ok) throw new Error(`Server ${res.status}`);
     const data = await res.json();
-    return JSON.parse(data.reply);
+    return data.result;
   } catch (err) {
     console.error('AI specialist recommendation failed:', err);
     return null;
@@ -159,11 +156,6 @@ function buildSpecialistList(doctorList, aiRec) {
   // If we have matching doctors, only show them; otherwise show everyone
   const matched = list.filter(d => d._relevance > 0);
   return matched.length > 0 ? matched : [...doctorList];
-
-  // Sort: top matches first
-  list.sort((a, b) => (b.isTopMatch ? 1 : 0) - (a.isTopMatch ? 1 : 0));
-
-  return list;
 }
 
 // ─── Doctor map — avoids JSON-in-attribute quoting bugs ───────────────────

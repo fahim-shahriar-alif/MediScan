@@ -218,6 +218,42 @@ Focus on medicines available in Bangladesh. Include 3-5 generic alternatives.`;
   }
 });
 
+// ─── POST /api/specialists ─────────────────────────────────────────────────
+// Body: { context: string }
+app.post('/api/specialists', async (req, res) => {
+  try {
+    const { context } = req.body;
+    if (!context) return res.status(400).json({ error: 'context required' });
+
+    const prompt = `You are a medical AI assistant. Based on the patient's health data, recommend the most suitable medical specialists.
+
+PATIENT HEALTH DATA:
+${context}
+
+Return ONLY a valid JSON object:
+{
+  "recommendation": "1-2 sentence explanation",
+  "primarySpecialist": "Most important specialist type",
+  "specialists": [
+    { "specialty": "Specialty name", "reason": "Why needed", "urgency": "Immediate OR Soon OR Routine", "priority": 1 }
+  ]
+}
+
+Return 2-4 specialists ordered by priority.`;
+
+    const content = await callGroq(
+      [{ role: 'user', content: prompt }],
+      { temperature: 0.2, max_tokens: 512, json: true }
+    );
+
+    res.json({ ok: true, result: JSON.parse(content) });
+
+  } catch (err) {
+    console.error('[/api/specialists]', err.message);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // ─── POST /api/ocr ─────────────────────────────────────────────────────────
 // Body: { image: base64, mimeType: string }
 app.post('/api/ocr', async (req, res) => {
