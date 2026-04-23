@@ -96,7 +96,7 @@
               <h3>Find the Right Specialist for These Results</h3>
               <p>Get matched with verified healthcare providers based on your analysis.</p>
             </div>
-            <a href="specialists.html" class="btn btn-primary">
+            <a href="specialists.html" class="btn btn-primary" id="findSpecialistBtn">
               Find Specialists
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -190,6 +190,10 @@
   <script type="module">
     import { requireAuth } from '../js/auth.js';
     requireAuth();
+    // Flag that we're arriving at specialists from the analysis flow
+    document.getElementById('findSpecialistBtn')?.addEventListener('click', () => {
+      sessionStorage.setItem('mediscan_from_flow', '1');
+    });
   </script>
   <script src="../js/analysis.js" type="module"></script>
 

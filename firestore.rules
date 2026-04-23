@@ -10,12 +10,13 @@ service cloud.firestore {
     }
 
     // ── Patient data: users can only read/write their own data ────────────
-    match /users/{userId}/{document=**} {
+    match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAdmin();
     }
 
-    // Admins can read all user documents and sub-collections
-    match /users/{userId} {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
       allow read: if isAdmin();
     }
 

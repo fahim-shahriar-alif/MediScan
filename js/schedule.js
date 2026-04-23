@@ -14,12 +14,12 @@ const doctor = loadData('selectedDoctor');
 if (doctor) {
   document.getElementById('docName').textContent      = doctor.name;
   document.getElementById('docSpecialty').textContent = doctor.specialty;
-  document.getElementById('docAddress').textContent   = doctor.address;
-  document.getElementById('docDistance').textContent  = doctor.distance + ' away';
-  document.getElementById('docPhone').textContent     = doctor.phone;
-  document.getElementById('mapAddress').textContent   = doctor.address;
-  document.getElementById('mapDistance').textContent  = doctor.distance + ' away';
-  document.getElementById('mapPhone').textContent     = doctor.phone;
+  document.getElementById('docAddress').textContent   = doctor.address   || '—';
+  document.getElementById('docDistance').textContent  = doctor.distance  ? doctor.distance + ' away' : '—';
+  document.getElementById('docPhone').textContent     = doctor.phone     || '—';
+  document.getElementById('mapAddress').textContent   = doctor.address   || '—';
+  document.getElementById('mapDistance').textContent  = doctor.distance  ? doctor.distance + ' away' : '—';
+  document.getElementById('mapPhone').textContent     = doctor.phone     || '—';
 
   // Star rating
   const stars = '★'.repeat(Math.floor(doctor.rating)) + (doctor.rating % 1 >= 0.5 ? '½' : '');

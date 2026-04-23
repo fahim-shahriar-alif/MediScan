@@ -56,7 +56,8 @@
             <p class="results-sidebar__text">
               Based on your results, we recommend consulting with a healthcare provider for a proper evaluation.
             </p>
-            <a href="specialists.html" class="btn btn-primary results-sidebar__btn">Find a Specialist</a>
+            <a href="specialists.html" class="btn btn-primary results-sidebar__btn" id="findSpecialistBtn">Find a
+              Specialist</a>
           </div>
 
           <div class="card">
@@ -87,6 +88,10 @@
   <script type="module">
     import { requireAuth } from '../js/auth.js';
     requireAuth();
+    // Flag that we're arriving from the symptom flow
+    document.getElementById('findSpecialistBtn')?.addEventListener('click', () => {
+      sessionStorage.setItem('mediscan_from_flow', '1');
+    });
 
     import { renderStepIndicator } from '../js/nav.js';
     import { loadData } from '../js/utils.js';

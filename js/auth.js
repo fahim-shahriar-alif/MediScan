@@ -12,6 +12,10 @@ import {
   firebaseSignOut,
   onAuthStateChanged,
   updateProfile,
+  db,
+  doc,
+  setDoc,
+  serverTimestamp,
 } from './firebase.js';
 
 // ─── Session helpers ────────────────────────────────────────────────────────
@@ -59,6 +63,36 @@ function mapUser(firebaseUser) {
   };
 }
 
+// ─── Sync user profile to Firestore ────────────────────────────────────────
+// Upserts users/{uid} so the admin panel can see all registered patients.
+// Uses merge:true so it never overwrites existing sub-collections or fields.
+
+async function syncUserToFirestore(firebaseUser, overrideName) {
+  try {
+    const rawName = overrideName
+      || firebaseUser.displayName
+      || firebaseUser.email?.split('@')[0]?.replace(/[._]/g, ' ')
+      || 'User';
+    const name = rawName.replace(/\b\w/g, c => c.toUpperCase());
+
+    await setDoc(
+      doc(db, 'users', firebaseUser.uid),
+      {
+        displayName: name,
+        email:       firebaseUser.email,
+        photoURL:    firebaseUser.photoURL || null,
+        provider:    firebaseUser.providerData?.[0]?.providerId || 'email',
+        createdAt:   firebaseUser.metadata?.creationTime || new Date().toISOString(),
+        lastSeen:    serverTimestamp(),
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    // Non-fatal — don't block the login flow
+    console.warn('Could not sync user to Firestore:', err);
+  }
+}
+
 // ─── Auth state listener ────────────────────────────────────────────────────
 
 onAuthStateChanged(auth, (firebaseUser) => {
@@ -76,6 +110,7 @@ export async function signInWithGoogle() {
   try {
     const result = await signInWithPopup(auth, provider);
     setUser(mapUser(result.user));
+    await syncUserToFirestore(result.user);
     _redirectAfterLogin();
   } catch (err) {
     console.error('Google sign-in failed:', err);
@@ -89,6 +124,7 @@ export async function signIn({ email, password }) {
   try {
     const result = await signInWithEmailAndPassword(auth, email, password);
     setUser(mapUser(result.user));
+    await syncUserToFirestore(result.user);
     return { ok: true, user: mapUser(result.user) };
   } catch (err) {
     return { ok: false, error: _friendlyError(err.code) };
@@ -100,10 +136,10 @@ export async function signIn({ email, password }) {
 export async function signUp({ name, email, password }) {
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password);
-    // Set display name
     await updateProfile(result.user, { displayName: name });
     const user = mapUser({ ...result.user, displayName: name });
     setUser(user);
+    await syncUserToFirestore(result.user, name);
     return { ok: true, user };
   } catch (err) {
     return { ok: false, error: _friendlyError(err.code) };

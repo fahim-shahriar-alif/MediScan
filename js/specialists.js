@@ -5,6 +5,7 @@
 import { renderStepIndicator } from './nav.js';
 import { loadData, saveData, MOCK_SPECIALISTS } from './utils.js';
 import { isLoggedIn } from './auth.js';
+import { db, collection, getDocs } from './firebase.js';
 
 // ─── Render step indicator ─────────────────────────────────────────────────
 renderStepIndicator('#step-indicator', ['Upload', 'Analysis', 'Navigator'], 3);
@@ -14,16 +15,32 @@ const analysisResult = loadData('analysisResult');
 const symptomResult  = loadData('symptomResult');
 const symptomData    = loadData('symptomData');
 
-// ─── Update recommendation banner ─────────────────────────────────────────
-const specialistType = analysisResult?.specialistType
-  || symptomResult?.specialistType
-  || 'General Practitioner';
+// Only show the AI recommendation banner if the user arrived here by clicking
+// "Find Specialists" from the analysis or symptom-results page.
+// The flag is set by those pages and consumed (cleared) here once.
+const fromFlow = sessionStorage.getItem('mediscan_from_flow') === '1';
+sessionStorage.removeItem('mediscan_from_flow'); // consume immediately
 
-document.getElementById('recText').textContent =
-  `Based on your analysis, we recommend consulting a ${specialistType}.`;
+const hasContext = fromFlow && !!(analysisResult || symptomResult);
+
+const recBanner = document.getElementById('recBanner');
+
+if (!hasContext) {
+  // Hide banner entirely when browsing directly
+  recBanner.hidden = true;
+} else {
+  const specialistType = analysisResult?.specialistType
+    || symptomResult?.specialistType
+    || 'General Practitioner';
+  document.getElementById('recText').textContent =
+    `Based on your analysis, we recommend consulting a ${specialistType}.`;
+}
 
 // ─── AI Specialist Recommendation ─────────────────────────────────────────
 async function getAISpecialistRecommendation() {
+  // Skip if user has no analysis/symptom context
+  if (!hasContext) return null;
+
   const key = CONFIG.GROQ_API_KEY;
   if (!key) return null;
 
@@ -86,10 +103,21 @@ Return 2-4 specialists ordered by priority. Be specific and medically accurate.`
   }
 }
 
+// ─── Fetch doctors from Firestore ─────────────────────────────────────────
+async function fetchDoctors() {
+  try {
+    const snap = await getDocs(collection(db, 'doctors'));
+    if (snap.empty) return null; // fall back to mock if collection is empty
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (err) {
+    console.error('Failed to load doctors from Firestore:', err);
+    return null;
+  }
+}
+
 // ─── Build specialist list based on AI recommendation ─────────────────────
-function buildSpecialistList(aiRec) {
-  // Start with mock specialists
-  let list = [...MOCK_SPECIALISTS];
+function buildSpecialistList(doctorList, aiRec) {
+  let list = [...doctorList];
 
   if (!aiRec?.specialists?.length) return list;
 
@@ -114,21 +142,45 @@ function buildSpecialistList(aiRec) {
   return list;
 }
 
+// ─── Doctor map — avoids JSON-in-attribute quoting bugs ───────────────────
+const doctorMap = new Map(); // id → doctor object
+let   allSpecialists = []; // full rendered list for search filtering
+
 // ─── Render specialist cards ───────────────────────────────────────────────
 function renderSpecialists(specialists) {
   const grid = document.getElementById('specialistGrid');
+  allSpecialists = specialists;
+  doctorMap.clear();
 
-  grid.innerHTML = specialists.map(doc => {
+  if (specialists.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--color-muted)">
+      <p>No specialists found.</p></div>`;
+    updateSearchCount(0, 0);
+    return;
+  }
+
+  specialists.forEach((doc, i) => doctorMap.set(String(i), doc));
+  updateSearchCount(specialists.length, specialists.length);
+  renderCards(specialists);
+}
+
+function renderCards(list) {
+  const grid = document.getElementById('specialistGrid');
+
+  grid.innerHTML = list.map((doc, i) => {
+    const key = String(allSpecialists.indexOf(doc));
     const urgencyColor = doc.urgency === 'Immediate' ? '#EF4444'
-                       : doc.urgency === 'Soon' ? '#F59E0B'
-                       : '#16A34A';
-    const urgencyBg = doc.urgency === 'Immediate' ? '#FEE2E2'
-                    : doc.urgency === 'Soon' ? '#FEF3C7'
-                    : '#DCFCE7';
+                       : doc.urgency === 'Soon'      ? '#F59E0B' : '#16A34A';
+    const urgencyBg   = doc.urgency === 'Immediate' ? '#FEE2E2'
+                       : doc.urgency === 'Soon'      ? '#FEF3C7' : '#DCFCE7';
+
+    // Gracefully handle missing optional fields from Firestore
+    const distanceStr = doc.distance ? `${doc.distance} away — ` : '';
+    const reviewsStr  = doc.reviews  ? `(${doc.reviews} reviews)` : '';
 
     return `
       <div class="specialist-card">
-        ${doc.isTopMatch ? '<div class="specialist-card__top-badge">⭐ AI Recommended for Your Condition</div>' : ''}
+        ${doc.isTopMatch ? '<div class="specialist-card__top-badge">⭐ AI Recommended</div>' : ''}
         <div class="specialist-card__header">
           <div class="specialist-card__avatar">${initials(doc.name)}</div>
           <div class="specialist-card__info">
@@ -137,7 +189,7 @@ function renderSpecialists(specialists) {
             <div class="specialist-card__rating">
               <span class="specialist-card__stars">${stars(doc.rating)}</span>
               <span>${doc.rating}</span>
-              <span class="specialist-card__reviews">(${doc.reviews} reviews)</span>
+              <span class="specialist-card__reviews">${reviewsStr}</span>
             </div>
           </div>
         </div>
@@ -152,14 +204,14 @@ function renderSpecialists(specialists) {
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
               <circle cx="12" cy="10" r="3"/>
             </svg>
-            ${doc.distance} away — ${doc.address}
+            ${distanceStr}${doc.address || 'Address not provided'}
           </div>
           <div class="specialist-card__detail">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
             </svg>
-            ${doc.phone}
+            ${doc.phone || 'Phone not provided'}
           </div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
@@ -168,19 +220,60 @@ function renderSpecialists(specialists) {
           </span>
         </div>
         <div class="specialist-card__actions">
-          <button class="btn btn-primary btn-sm book-btn" data-doctor='${JSON.stringify(doc)}'>Book Appointment</button>
-          <button class="btn btn-outline btn-sm details-btn" data-doctor='${JSON.stringify(doc)}'>Details</button>
+          <button class="btn btn-primary btn-sm book-btn" data-key="${key}">Book Appointment</button>
+          <button class="btn btn-outline btn-sm details-btn" data-key="${key}">Details</button>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 
-  // Wire up buttons
-  document.querySelectorAll('.book-btn').forEach(btn => {
-    btn.addEventListener('click', () => bookDoctor(JSON.parse(btn.dataset.doctor)));
+  // Wire buttons using the map — no JSON-in-attribute
+  grid.querySelectorAll('.book-btn').forEach(btn => {
+    btn.addEventListener('click', () => bookDoctor(doctorMap.get(btn.dataset.key)));
   });
-  document.querySelectorAll('.details-btn').forEach(btn => {
-    btn.addEventListener('click', () => showDetailsModal(JSON.parse(btn.dataset.doctor)));
+  grid.querySelectorAll('.details-btn').forEach(btn => {
+    btn.addEventListener('click', () => showDetailsModal(doctorMap.get(btn.dataset.key)));
+  });
+}
+
+// ─── Search bar wiring ─────────────────────────────────────────────────────
+function updateSearchCount(shown, total) {
+  const el = document.getElementById('searchCount');
+  if (!el) return;
+  el.textContent = shown === total
+    ? `${total} specialist${total !== 1 ? 's' : ''} available`
+    : `${shown} of ${total} specialist${total !== 1 ? 's' : ''} shown`;
+}
+
+function wireSearch() {
+  const input     = document.getElementById('specialistSearch');
+  const clearBtn  = document.getElementById('searchClear');
+  if (!input) return;
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    clearBtn.hidden = !q;
+
+    if (!q) {
+      renderCards(allSpecialists);
+      updateSearchCount(allSpecialists.length, allSpecialists.length);
+      return;
+    }
+
+    const filtered = allSpecialists.filter(d =>
+      d.name?.toLowerCase().includes(q) ||
+      d.specialty?.toLowerCase().includes(q) ||
+      d.address?.toLowerCase().includes(q)
+    );
+    renderCards(filtered);
+    updateSearchCount(filtered.length, allSpecialists.length);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    clearBtn.hidden = true;
+    renderCards(allSpecialists);
+    updateSearchCount(allSpecialists.length, allSpecialists.length);
+    input.focus();
   });
 }
 
@@ -195,7 +288,7 @@ function initials(name) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2);
 }
 
-// ─── Init: load AI recommendation then render ──────────────────────────────
+// ─── Init: load doctors + AI recommendation then render ───────────────────
 async function init() {
   const grid = document.getElementById('specialistGrid');
 
@@ -208,17 +301,30 @@ async function init() {
       <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
     </div>`;
 
-  // Get AI recommendation
-  const aiRec = await getAISpecialistRecommendation();
+  // Fetch doctors from Firestore (fall back to mock if unavailable)
+  const [firestoreDoctors, aiRec] = await Promise.all([
+    fetchDoctors(),
+    getAISpecialistRecommendation(),
+  ]);
 
-  // Update banner with AI recommendation
-  if (aiRec?.recommendation) {
+  const doctorList = firestoreDoctors || MOCK_SPECIALISTS;
+
+  // Update banner with AI recommendation (only if banner is visible)
+  if (hasContext && aiRec?.recommendation) {
     document.getElementById('recText').textContent = aiRec.recommendation;
   }
 
+  if (doctorList.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--color-muted)">
+      <p>No specialists available at the moment. Please check back later.</p>
+    </div>`;
+    return;
+  }
+
   // Build and render specialist list
-  const specialists = buildSpecialistList(aiRec);
+  const specialists = buildSpecialistList(doctorList, aiRec);
   renderSpecialists(specialists);
+  wireSearch();
 }
 
 init();
@@ -277,6 +383,9 @@ function showDetailsModal(doc) {
   const existing = document.getElementById('specialistModal');
   if (existing) existing.remove();
 
+  const reviewsStr = doc.reviews ? `(${doc.reviews} reviews)` : '';
+  const distanceStr = doc.distance ? doc.distance : 'N/A';
+
   const modal = document.createElement('div');
   modal.id = 'specialistModal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem';
@@ -292,13 +401,13 @@ function showDetailsModal(doc) {
       </div>
       ${doc.aiReason ? `<div style="background:#EFF6FF;border-radius:8px;padding:0.625rem 0.75rem;margin-bottom:1rem;font-size:0.8125rem;color:#1D4ED8"><strong>AI Recommendation:</strong> ${doc.aiReason}</div>` : ''}
       <div style="display:flex;flex-direction:column;gap:0.75rem;font-size:0.875rem;color:#374151">
-        <div><strong>Rating:</strong> ★ ${doc.rating} (${doc.reviews} reviews)</div>
-        <div><strong>Distance:</strong> ${doc.distance}</div>
-        <div><strong>Address:</strong> ${doc.address}</div>
-        <div><strong>Phone:</strong> <a href="tel:${doc.phone}" style="color:#2563EB">${doc.phone}</a></div>
+        <div><strong>Rating:</strong> ★ ${doc.rating} ${reviewsStr}</div>
+        <div><strong>Distance:</strong> ${distanceStr}</div>
+        <div><strong>Address:</strong> ${doc.address || 'Not provided'}</div>
+        <div><strong>Phone:</strong> <a href="tel:${doc.phone}" style="color:#2563EB">${doc.phone || 'Not provided'}</a></div>
       </div>
       <div style="display:flex;gap:0.75rem;margin-top:1.5rem">
-        <button class="btn btn-primary modal-book-btn" style="flex:1;justify-content:center" data-doctor='${JSON.stringify(doc)}'>Book Appointment</button>
+        <button class="btn btn-primary modal-book-btn" style="flex:1;justify-content:center">Book Appointment</button>
         <button id="closeModal2" class="btn btn-outline" style="flex:1;justify-content:center">Close</button>
       </div>
     </div>`;
