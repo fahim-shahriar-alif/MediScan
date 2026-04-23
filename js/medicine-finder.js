@@ -19,16 +19,24 @@ const scanPreviewImg = document.getElementById('scanPreviewImg');
 const scanOverlay    = document.getElementById('scanOverlay');
 const clearScanBtn   = document.getElementById('clearScanBtn');
 
+if (!openCameraBtn || !uploadImageBtn || !imageFileInput) {
+  console.error('[MediScan] Scan elements not found in DOM');
+}
+
 // Upload image
-uploadImageBtn.addEventListener('click', () => imageFileInput.click());
-imageFileInput.addEventListener('change', () => {
-  const file = imageFileInput.files[0];
-  if (file) processImageFile(file);
-  imageFileInput.value = '';
-});
+if (uploadImageBtn) {
+  uploadImageBtn.addEventListener('click', () => imageFileInput.click());
+}
+if (imageFileInput) {
+  imageFileInput.addEventListener('change', () => {
+    const file = imageFileInput.files[0];
+    if (file) processImageFile(file);
+    imageFileInput.value = '';
+  });
+}
 
 // Camera
-openCameraBtn.addEventListener('click', async () => {
+if (openCameraBtn) openCameraBtn.addEventListener('click', async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
     const modal  = document.createElement('div');
@@ -69,10 +77,12 @@ openCameraBtn.addEventListener('click', async () => {
 });
 
 // Clear scan
-clearScanBtn.addEventListener('click', () => {
-  scanPreview.hidden = true;
-  scanPreviewImg.src = '';
-});
+if (clearScanBtn) {
+  clearScanBtn.addEventListener('click', () => {
+    scanPreview.hidden = true;
+    scanPreviewImg.src = '';
+  });
+}
 
 // Process image — show preview then OCR
 async function processImageFile(file) {
@@ -82,6 +92,8 @@ async function processImageFile(file) {
     scanPreviewImg.src = dataUrl;
     scanPreview.hidden = false;
     scanOverlay.hidden = false;
+    const overlayText = scanOverlay.querySelector('p');
+    if (overlayText) overlayText.textContent = 'Reading medicine name… (may take a moment)';
 
     try {
       const base64 = dataUrl.split(',')[1];
@@ -106,14 +118,24 @@ async function processImageFile(file) {
 
 // OCR via server
 async function ocrMedicineName(base64, mimeType) {
-  const res  = await fetch(`${API_URL}/api/ocr`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ image: base64, mimeType }),
-  });
-  const data = await res.json();
-  if (!data.ok) throw new Error(data.error || 'OCR failed');
-  return data.medicineName || null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+  try {
+    const res = await fetch(`${API_URL}/api/ocr`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ image: base64, mimeType }),
+      signal:  controller.signal,
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || 'OCR failed');
+    return data.medicineName || null;
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('Server took too long to respond. It may be waking up — please try again in a moment.');
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // ─── Quick-search chips ────────────────────────────────────────────────────
@@ -155,61 +177,6 @@ async function findGenericMedicine(medicineName) {
   const data = await res.json();
   if (!data.ok) throw new Error(data.error || 'Server error');
   return data.result;
-}
-
-  const prompt = `You are a pharmaceutical expert. The user is asking about the medicine: "${medicineName}".
-
-Return ONLY a valid JSON object (no markdown):
-{
-  "brandName": "the brand name as entered or corrected",
-  "genericName": "the INN/generic name of the active ingredient",
-  "activeIngredient": "active ingredient with strength e.g. Paracetamol 500mg",
-  "drugClass": "drug class e.g. Analgesic / Antipyretic",
-  "dosageForm": "e.g. Tablet, Capsule, Syrup, Suspension, Injection, Cream, Drops, Inhaler",
-  "uses": ["use 1", "use 2", "use 3"],
-  "dosage": "standard adult dosage with correct unit for the form (e.g. 5ml for syrup, 1 tablet, 2 puffs)",
-  "sideEffects": ["side effect 1", "side effect 2", "side effect 3"],
-  "warnings": ["warning 1", "warning 2"],
-  "genericAlternatives": [
-    {
-      "name": "generic brand name",
-      "manufacturer": "manufacturer name",
-      "estimatedPrice": "approximate price in BDT with correct unit for the form e.g. ৳40–60 per 100ml bottle for syrup, ৳2–5 per tablet, ৳15–25 per vial for injection (may vary)"
-    }
-  ],
-  "savingsNote": "brief note on how much cheaper generics typically are vs brand name",
-  "requiresPrescription": true or false,
-  "notFound": false
-}
-
-If the medicine is completely unknown, return { "notFound": true, "brandName": "${medicineName}" }.
-Focus on medicines available in Bangladesh. Include 3-5 generic alternatives if available.
-Use the correct dosage form and pricing unit — do NOT assume tablet if it is a syrup, injection, cream, or other form.`;
-
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${key}`
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.1,
-      max_tokens: 1024,
-      response_format: { type: 'json_object' }
-    })
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(`API error: ${err?.error?.message || res.status}`);
-  }
-
-  const data = await res.json();
-  const raw  = data.choices?.[0]?.message?.content;
-  if (!raw) throw new Error('Empty response from AI');
-  return JSON.parse(raw);
 }
 
 // ─── Render result ─────────────────────────────────────────────────────────
