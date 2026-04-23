@@ -2,9 +2,54 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only read/write their own data
+
+    // ── Helper: check if the requesting user is an admin ──────────────────
+    function isAdmin() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // ── Patient data: users can only read/write their own data ────────────
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Admins can read all user documents and sub-collections
+    match /users/{userId} {
+      allow read: if isAdmin();
+    }
+
+    // ── Admins collection: users can read their own admin doc ─────────────
+    match /admins/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if isAdmin();
+    }
+
+    // ── Doctors collection: anyone authenticated can read; admins can write
+    match /doctors/{doctorId} {
+      allow read:  if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // ── CollectionGroup rules for cross-user admin reads/writes ───────────
+    // Appointments across all users
+    match /{path=**}/appointments/{appointmentId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Analyses across all users
+    match /{path=**}/analyses/{analysisId} {
+      allow read: if isAdmin();
+    }
+
+    // Symptoms across all users
+    match /{path=**}/symptoms/{symptomId} {
+      allow read: if isAdmin();
+    }
+
+    // History across all users
+    match /{path=**}/history/{historyId} {
+      allow read: if isAdmin();
     }
   }
 }
