@@ -15,6 +15,7 @@ import {
   db,
   doc,
   setDoc,
+  getDoc,
   serverTimestamp,
 } from './firebase.js';
 
@@ -75,20 +76,24 @@ async function syncUserToFirestore(firebaseUser, overrideName) {
       || 'User';
     const name = rawName.replace(/\b\w/g, c => c.toUpperCase());
 
-    await setDoc(
-      doc(db, 'users', firebaseUser.uid),
-      {
-        displayName: name,
-        email:       firebaseUser.email,
-        photoURL:    firebaseUser.photoURL || null,
-        provider:    firebaseUser.providerData?.[0]?.providerId || 'email',
-        createdAt:   firebaseUser.metadata?.creationTime || new Date().toISOString(),
-        lastSeen:    serverTimestamp(),
-      },
-      { merge: true }
-    );
+    const userRef  = doc(db, 'users', firebaseUser.uid);
+    const existing = await getDoc(userRef);
+
+    const data = {
+      displayName: name,
+      email:       firebaseUser.email,
+      photoURL:    firebaseUser.photoURL || null,
+      provider:    firebaseUser.providerData?.[0]?.providerId || 'email',
+      lastSeen:    serverTimestamp(),
+    };
+
+    // Only set createdAt if the document doesn't exist yet
+    if (!existing.exists()) {
+      data.createdAt = firebaseUser.metadata?.creationTime || new Date().toISOString();
+    }
+
+    await setDoc(userRef, data, { merge: true });
   } catch (err) {
-    // Non-fatal — don't block the login flow
     console.warn('Could not sync user to Firestore:', err);
   }
 }
