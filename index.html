@@ -27,6 +27,7 @@
           <li><a href="pages/specialists.html">Find Specialists</a></li>
           <li><a href="pages/symptoms.html">AI Health Check</a></li>
           <li><a href="pages/medicine-finder.html">Medicine Finder</a></li>
+          <li><a href="pages/health-chat.html">Health Chat</a></li>
         </ul>
         <div id="navbar__user-slot"></div>
       </div>
@@ -393,7 +394,7 @@
     // Guard feature links — redirect to login if not authenticated
     import { isLoggedIn } from './js/auth.js';
 
-    const featureLinks = document.querySelectorAll('a[href*="upload"], a[href*="symptoms"], a[href*="specialists"], a[href*="health-history"], a[href*="medicine-finder"]');
+    const featureLinks = document.querySelectorAll('a[href*="upload"], a[href*="symptoms"], a[href*="specialists"], a[href*="health-history"], a[href*="medicine-finder"], a[href*="health-chat"]');
     featureLinks.forEach(link => {
       link.addEventListener('click', (e) => {
         if (!isLoggedIn()) {

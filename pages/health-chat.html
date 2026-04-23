@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Health Chat — MediScan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/health-chat.css" />
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar__inner">
+        <a href="../index.html" class="navbar__logo" aria-label="MediScan home">
+          <img src="../assets/logo.svg" alt="MediScan" class="navbar__logo-img" />
+        </a>
+        <ul class="navbar__nav" role="list">
+          <li><a href="health-history.html">Health History</a></li>
+          <li><a href="specialists.html">Find Specialists</a></li>
+          <li><a href="symptoms.html">AI Health Check</a></li>
+          <li><a href="medicine-finder.html">Medicine Finder</a></li>
+          <li><a href="health-chat.html" class="active">Health Chat</a></li>
+        </ul>
+        <div id="navbar__user-slot"></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="chat-page">
+    <div class="chat-layout">
+
+      <!-- Sidebar -->
+      <aside class="chat-sidebar">
+        <div class="chat-sidebar__header">
+          <div class="chat-sidebar__avatar" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="chat-sidebar__name">MediScan AI</h2>
+            <span class="chat-sidebar__status">
+              <span class="chat-sidebar__dot"></span>Online
+            </span>
+          </div>
+        </div>
+
+        <p class="chat-sidebar__desc">
+          Ask me anything about your health results, symptoms, medicines, or general health questions.
+        </p>
+
+        <!-- Context loaded -->
+        <div class="chat-context-card" id="contextCard">
+          <p class="chat-context-card__title">Your Health Context</p>
+          <div id="contextSummary">
+            <p class="chat-context-card__empty">No recent analysis found. Upload a report or complete a symptom check
+              first for personalized answers.</p>
+          </div>
+        </div>
+
+        <!-- Suggested questions -->
+        <div class="chat-suggestions">
+          <p class="chat-suggestions__title">Suggested Questions</p>
+          <div id="suggestionsList"></div>
+        </div>
+
+        <button class="btn btn-ghost btn-sm chat-clear-btn" id="clearChatBtn" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6" />
+            <path d="M14 11v6" />
+          </svg>
+          Clear Chat
+        </button>
+      </aside>
+
+      <!-- Chat area -->
+      <div class="chat-main">
+        <div class="chat-messages" id="chatMessages">
+          <!-- Welcome message rendered by JS -->
+        </div>
+
+        <!-- Input -->
+        <div class="chat-input-wrap">
+          <div class="chat-input-inner">
+            <textarea id="chatInput" class="chat-input" placeholder="Ask about your health results…" rows="1"
+              maxlength="500"></textarea>
+            <button class="chat-send-btn" id="sendBtn" type="button" aria-label="Send message">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </button>
+          </div>
+          <p class="chat-input-hint">MediScan AI provides general health information only — not medical advice.</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script src="../js/nav.js" type="module"></script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    requireAuth();
+  </script>
+  <script src="../js/health-chat.js" type="module"></script>
+
+</body>
+
+</html>
