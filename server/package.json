@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "MediScan Express backend — proxies AI API calls securely",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js"
