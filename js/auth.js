@@ -99,12 +99,25 @@ async function syncUserToFirestore(firebaseUser, overrideName) {
   }
 }
 
+// ─── Clear stale health data ────────────────────────────────────────────────
+// Wipes health data that belongs to a different user so the chat widget
+// and specialist page never show another user's results.
+function clearHealthData() {
+  ['analysisResult', 'symptomResult', 'symptomData',
+   'uploadedFileName', 'uploadedFileCount', 'selectedDoctor',
+   'appointmentDetails', 'confirmationNumber'].forEach(k => localStorage.removeItem(k));
+}
+
 // ─── Auth state listener ────────────────────────────────────────────────────
 
 onAuthStateChanged(auth, (firebaseUser) => {
   if (firebaseUser) {
+    // If a different user is signing in, clear the previous user's health data
+    const currentUser = getUser();
+    if (currentUser && currentUser.id !== firebaseUser.uid) {
+      clearHealthData();
+    }
     setUser(mapUser(firebaseUser));
-    // Sync to Firestore on every auth state change — ensures email is always written
     syncUserToFirestore(firebaseUser);
   } else {
     clearUser();
@@ -162,9 +175,13 @@ export async function signOut(redirectTo = '../index.html') {
     console.error('Firebase signout error:', err);
   }
   clearUser();
-  // Clear all mediscan data from localStorage
+  // Clear all mediscan session data from localStorage
+  const healthKeys = ['analysisResult', 'symptomResult', 'symptomData',
+    'uploadedFileName', 'uploadedFileCount', 'selectedDoctor',
+    'appointmentDetails', 'confirmationNumber'];
+  healthKeys.forEach(k => localStorage.removeItem(k));
   Object.keys(localStorage)
-    .filter(k => k.startsWith('mediscan'))
+    .filter(k => k.startsWith('mediscan') || k.startsWith('appointmentSaved_'))
     .forEach(k => localStorage.removeItem(k));
   window.location.href = redirectTo;
 }
