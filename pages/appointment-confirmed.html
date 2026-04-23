@@ -32,6 +32,7 @@
   </header>
 
   <main class="confirmed-page">
+    <div id="step-indicator" class="container"></div>
     <div class="container">
       <div class="confirmed-card card">
         <div class="confirmed-card__check" aria-hidden="true">
@@ -83,8 +84,10 @@
     import { auth, onAuthStateChanged } from '../js/firebase.js';
     import { loadData, formatDate } from '../js/utils.js';
     import { saveAppointment } from '../js/db.js';
+    import { renderStepIndicator } from '../js/nav.js';
 
     requireAuth();
+    renderStepIndicator('#step-indicator', ['Select Specialist', 'Schedule', 'Confirm'], 3);
 
     const confNum = loadData('confirmationNumber');
     const appt = loadData('appointmentDetails');

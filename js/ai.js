@@ -7,7 +7,7 @@
  * skipping the need for a separate Vision API key entirely.
  */
 
-import { saveData, MOCK_ANALYSIS, MOCK_SYMPTOM_RESULT } from './utils.js';
+import { saveData, MOCK_ANALYSIS } from './utils.js';
 
 // Lazy import db to avoid circular deps
 async function getDb() {

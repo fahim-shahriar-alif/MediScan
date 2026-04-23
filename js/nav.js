@@ -121,13 +121,13 @@ const pages   = inPages ? '' : 'pages/';
     // Sign out from Firebase first
     try {
       const { signOut } = await import('./auth.js');
-      await signOut(`${root}pages/login.html`);
+      await signOut(inPages ? 'login.html' : 'pages/login.html');
     } catch (err) {
       // Fallback: clear manually
       localStorage.removeItem('mediscan_user');
       localStorage.removeItem('mediscan_session');
       sessionStorage.removeItem('mediscan_session_only');
-      window.location.href = `${root}pages/login.html`;
+      window.location.href = inPages ? 'login.html' : 'pages/login.html';
     }
   });
 })();

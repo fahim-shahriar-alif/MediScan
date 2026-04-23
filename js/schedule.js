@@ -6,7 +6,7 @@ import { renderStepIndicator } from './nav.js';
 import { loadData, saveData } from './utils.js';
 
 // ─── Step indicator ────────────────────────────────────────────────────────
-renderStepIndicator('#step-indicator', ['Upload', 'Analysis', 'Navigator'], 3);
+renderStepIndicator('#step-indicator', ['Select Specialist', 'Schedule', 'Confirm'], 2);
 
 // ─── Load doctor ───────────────────────────────────────────────────────────
 const doctor = loadData('selectedDoctor');
