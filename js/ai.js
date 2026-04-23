@@ -9,6 +9,9 @@
 
 import { saveData, MOCK_ANALYSIS } from './utils.js';
 
+// CONFIG is set by config.js as window.CONFIG — read it safely
+const CONFIG = window.CONFIG || {};
+
 // Lazy import db to avoid circular deps
 async function getDb() {
   try { return await import('./db.js'); } catch { return null; }

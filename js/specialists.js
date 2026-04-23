@@ -7,6 +7,9 @@ import { loadData, saveData, MOCK_SPECIALISTS } from './utils.js';
 import { isLoggedIn } from './auth.js';
 import { db, collection, getDocs } from './firebase.js';
 
+// CONFIG is set by config.js as window.CONFIG — read it safely
+const CONFIG = window.CONFIG || {};
+
 // ─── Render step indicator ─────────────────────────────────────────────────
 renderStepIndicator('#step-indicator', ['Upload', 'Analysis', 'Navigator'], 3);
 
