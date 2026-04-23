@@ -117,9 +117,13 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no extra
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function analyzeImageWithGemini(base64Image, mimeType) {
-  // Use Groq if available, otherwise fall back to Gemini
+  // Try Groq first, fall back to Gemini on failure
   if (CONFIG.GROQ_API_KEY) {
-    return await analyzeImageWithGroq(base64Image, mimeType);
+    try {
+      return await analyzeImageWithGroq(base64Image, mimeType);
+    } catch (groqErr) {
+      console.warn('⚠️ Groq failed, falling back to Gemini:', groqErr.message);
+    }
   }
 
   const key   = CONFIG.GOOGLE_GEMINI_API_KEY;
@@ -229,10 +233,7 @@ export async function analyzeReport(base64Image, mimeType) {
   console.log('🏥 MediScan: Starting report analysis...');
 
   if (!CONFIG.GROQ_API_KEY && !CONFIG.GOOGLE_GEMINI_API_KEY) {
-    console.warn('⚠️ No API key configured — showing error');
-    const mock = { ...MOCK_ANALYSIS, analysisDate: new Date().toISOString(), source: 'fallback_mock' };
-    saveData('analysisResult', mock);
-    return mock;
+    throw new Error('No API key configured. Please add a Groq or Gemini API key to config.js.');
   }
 
   try {
@@ -253,9 +254,7 @@ export async function analyzeReport(base64Image, mimeType) {
 
   } catch (err) {
     console.error('❌ Analysis failed:', err.message);
-    const mock = { ...MOCK_ANALYSIS, analysisDate: new Date().toISOString(), source: 'fallback_mock', _error: err.message };
-    saveData('analysisResult', mock);
-    return mock;
+    throw err; // re-throw so upload.js shows the real error
   }
 }
 
