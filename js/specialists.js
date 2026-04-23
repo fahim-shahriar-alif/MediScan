@@ -18,16 +18,18 @@ const symptomData    = loadData('symptomData');
 // Only show the AI recommendation banner if the user arrived here by clicking
 // "Find Specialists" from the analysis or symptom-results page.
 const fromFlow     = sessionStorage.getItem('mediscan_from_flow') === '1';
-const fromSymptoms = sessionStorage.getItem('mediscan_flow_source') === 'symptoms';
+const flowSource   = sessionStorage.getItem('mediscan_flow_source') || 'report'; // 'report' | 'symptoms' | 'merged'
 sessionStorage.removeItem('mediscan_from_flow');
 sessionStorage.removeItem('mediscan_flow_source');
 
 const hasContext = fromFlow && !!(analysisResult || symptomResult);
 
-// Use only the context relevant to the current flow — don't mix old report data
-// into a symptom-only check and vice versa
-const activeAnalysis = fromSymptoms ? null : analysisResult;
-const activeSymptom  = symptomResult;
+// Use only the context relevant to the current flow
+// 'symptoms' → ignore old report data
+// 'report'   → ignore old symptom data  
+// 'merged'   → use both (user did both scan + symptom check)
+const activeAnalysis = (flowSource === 'symptoms') ? null : analysisResult;
+const activeSymptom  = (flowSource === 'report')   ? null : symptomResult;
 
 // ─── Render step indicator only when coming from a flow ───────────────────
 if (hasContext) {

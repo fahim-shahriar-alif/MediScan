@@ -96,14 +96,20 @@
               <h3>Find the Right Specialist for These Results</h3>
               <p>Get matched with verified healthcare providers based on your analysis.</p>
             </div>
-            <a href="specialists.html" class="btn btn-primary" id="findSpecialistBtn">
-              Find Specialists
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
-            </a>
+            <div style="display:flex;flex-direction:column;gap:0.625rem;min-width:180px">
+              <a href="specialists.html" class="btn btn-primary" id="findSpecialistBtn">
+                Find Specialists
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </a>
+              <a href="symptoms.html" class="btn btn-outline btn-sm" id="addSymptomsBtn"
+                style="justify-content:center;font-size:0.8125rem">
+                + Add Symptom Check
+              </a>
+            </div>
           </div>
 
         </div>
@@ -193,6 +199,11 @@
     // Flag that we're arriving at specialists from the analysis flow
     document.getElementById('findSpecialistBtn')?.addEventListener('click', () => {
       sessionStorage.setItem('mediscan_from_flow', '1');
+      // source = 'report' (default, no need to set)
+    });
+    // Add symptom check — keep scan context for later merge
+    document.getElementById('addSymptomsBtn')?.addEventListener('click', () => {
+      sessionStorage.setItem('mediscan_has_scan', '1');
     });
   </script>
   <script src="../js/analysis.js" type="module"></script>

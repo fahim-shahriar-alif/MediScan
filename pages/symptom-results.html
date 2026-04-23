@@ -60,6 +60,20 @@
               Specialist</a>
           </div>
 
+          <!-- Enhance with scan -->
+          <div class="card" style="border:1.5px solid #DBEAFE;background:#F0F7FF">
+            <h3 class="results-sidebar__title" style="color:#1D4ED8">
+              🔬 Get a More Accurate Result
+            </h3>
+            <p class="results-sidebar__text">
+              Upload a medical report or lab result to combine with your symptoms for a deeper AI analysis.
+            </p>
+            <a href="upload.html" class="btn btn-outline btn-sm results-sidebar__btn" id="addScanBtn"
+              style="border-color:#2563EB;color:#2563EB;justify-content:center">
+              + Add Medical Scan
+            </a>
+          </div>
+
           <div class="card">
             <h3 class="results-sidebar__title">Your Symptoms</h3>
             <div id="symptomsSummary"></div>
@@ -92,6 +106,11 @@
     document.getElementById('findSpecialistBtn')?.addEventListener('click', () => {
       sessionStorage.setItem('mediscan_from_flow', '1');
       sessionStorage.setItem('mediscan_flow_source', 'symptoms');
+      // If user also did a scan, merge both contexts
+      if (sessionStorage.getItem('mediscan_has_scan') === '1') {
+        sessionStorage.setItem('mediscan_flow_source', 'merged');
+        sessionStorage.removeItem('mediscan_has_scan');
+      }
     });
 
     import { renderStepIndicator } from '../js/nav.js';
