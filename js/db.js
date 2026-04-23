@@ -185,7 +185,7 @@ export async function saveAppointment(appointmentData) {
       title:       `Appointment with ${appointmentData.doctorName || 'Specialist'}`,
       description: `${appointmentData.specialty || 'Consultation'} scheduled at ${appointmentData.address || ''}.`,
       badge:       'Appointment',
-      badgeColor:  'success',
+      badgeColor:  'warning',
       link:        'appointment-confirmed.html',
       appointmentId: docRef.id,
     });
