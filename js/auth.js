@@ -79,9 +79,10 @@ async function syncUserToFirestore(firebaseUser, overrideName) {
     const userRef  = doc(db, 'users', firebaseUser.uid);
     const existing = await getDoc(userRef);
 
+    // Always write these fields — email must always be present
     const data = {
       displayName: name,
-      email:       firebaseUser.email,
+      email:       firebaseUser.email,   // always sync — critical for admin panel
       photoURL:    firebaseUser.photoURL || null,
       provider:    firebaseUser.providerData?.[0]?.providerId || 'email',
       lastSeen:    serverTimestamp(),
@@ -103,8 +104,9 @@ async function syncUserToFirestore(firebaseUser, overrideName) {
 onAuthStateChanged(auth, (firebaseUser) => {
   if (firebaseUser) {
     setUser(mapUser(firebaseUser));
+    // Sync to Firestore on every auth state change — ensures email is always written
+    syncUserToFirestore(firebaseUser);
   } else {
-    // Firebase says no user — clear localStorage too
     clearUser();
   }
 });
