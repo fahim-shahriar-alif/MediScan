@@ -250,6 +250,6 @@ analyzeBtn.addEventListener('click', async () => {
   } catch (err) {
     console.error('Analysis failed:', err);
     uploadLoading.classList.remove('active');
-    alert('Something went wrong during analysis. Please try again.');
+    alert(`Analysis failed: ${err.message || 'Unknown error'}. Check the browser console for details.`);
   }
 });

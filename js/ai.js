@@ -20,7 +20,7 @@ async function getDb() {
 
 async function analyzeImageWithGroq(base64Image, mimeType) {
   const key   = CONFIG.GROQ_API_KEY;
-  const model = 'meta-llama/llama-4-scout-17b-16e-instruct';
+  const model = 'meta-llama/llama-4-maverick-17b-128e-instruct';
   const mime  = mimeType || 'image/jpeg';
   const dataUrl = base64Image.startsWith('data:')
     ? base64Image
