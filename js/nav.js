@@ -13,6 +13,16 @@ const inPages = window.location.pathname.includes('/pages/');
 const root    = inPages ? '../' : '';
 const pages   = inPages ? '' : 'pages/';
 
+// ─── Inject chat widget on every page ────────────────────────────────────────
+// Skip on login/signup/forgot-password pages
+const isAuthPage = /\/(login|signup|forgot-password)\.html/.test(window.location.pathname);
+if (!isAuthPage) {
+  const widgetScript = document.createElement('script');
+  widgetScript.src = `${root}js/chat-widget.js`;
+  widgetScript.type = 'module';
+  document.body.appendChild(widgetScript);
+}
+
 // ─── Active nav link ─────────────────────────────────────────────────────────
 
 (function highlightActiveNav() {
