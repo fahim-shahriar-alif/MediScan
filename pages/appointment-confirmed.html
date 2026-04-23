@@ -113,6 +113,8 @@
 
         await saveAppointment({
           confirmationNumber: confNum,
+          patientName: user.displayName || user.email || 'Unknown Patient',
+          patientEmail: user.email || '',
           doctorName: doc.name,
           specialty: doc.specialty,
           address: doc.address,
