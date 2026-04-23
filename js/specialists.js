@@ -10,8 +10,10 @@ import { db, collection, getDocs } from './firebase.js';
 // CONFIG is set by config.js as window.CONFIG — read it safely
 const CONFIG = window.CONFIG || {};
 
-// ─── Render step indicator ─────────────────────────────────────────────────
-renderStepIndicator('#step-indicator', ['Upload', 'Analysis', 'Navigator'], 3);
+// ─── Render step indicator only when coming from a flow ───────────────────
+if (hasContext) {
+  renderStepIndicator('#step-indicator', ['Upload', 'Analysis', 'Navigator'], 3);
+}
 
 // ─── Load context from previous analysis ──────────────────────────────────
 const analysisResult = loadData('analysisResult');
