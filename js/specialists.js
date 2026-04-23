@@ -10,11 +10,6 @@ import { db, collection, getDocs } from './firebase.js';
 // CONFIG is set by config.js as window.CONFIG — read it safely
 const CONFIG = window.CONFIG || {};
 
-// ─── Render step indicator only when coming from a flow ───────────────────
-if (hasContext) {
-  renderStepIndicator('#step-indicator', ['Upload', 'Analysis', 'Navigator'], 3);
-}
-
 // ─── Load context from previous analysis ──────────────────────────────────
 const analysisResult = loadData('analysisResult');
 const symptomResult  = loadData('symptomResult');
@@ -22,16 +17,19 @@ const symptomData    = loadData('symptomData');
 
 // Only show the AI recommendation banner if the user arrived here by clicking
 // "Find Specialists" from the analysis or symptom-results page.
-// The flag is set by those pages and consumed (cleared) here once.
 const fromFlow = sessionStorage.getItem('mediscan_from_flow') === '1';
 sessionStorage.removeItem('mediscan_from_flow'); // consume immediately
 
 const hasContext = fromFlow && !!(analysisResult || symptomResult);
 
+// ─── Render step indicator only when coming from a flow ───────────────────
+if (hasContext) {
+  renderStepIndicator('#step-indicator', ['Upload', 'Analysis', 'Navigator'], 3);
+}
+
 const recBanner = document.getElementById('recBanner');
 
 if (!hasContext) {
-  // Hide banner entirely when browsing directly
   recBanner.hidden = true;
 } else {
   const specialistType = analysisResult?.specialistType
@@ -156,9 +154,9 @@ function buildSpecialistList(doctorList, aiRec) {
   // Sort: matching specialists first, then the rest
   list.sort((a, b) => b._relevance - a._relevance);
 
-  // If we have matching doctors, only show them (+ a "show all" option handled in render)
+  // If we have matching doctors, only show them; otherwise show everyone
   const matched = list.filter(d => d._relevance > 0);
-  return matched.length > 0 ? matched : list;
+  return matched.length > 0 ? matched : [...doctorList];
 
   // Sort: top matches first
   list.sort((a, b) => (b.isTopMatch ? 1 : 0) - (a.isTopMatch ? 1 : 0));
@@ -347,7 +345,8 @@ async function init() {
 
   // Build and render specialist list
   const specialists = buildSpecialistList(doctorList, aiRec);
-  const isFiltered = hasContext && aiRec?.specialists?.length && specialists.length < doctorList.length;
+  const matchedCount = specialists.filter(d => d._relevance > 0).length;
+  const isFiltered = hasContext && aiRec?.specialists?.length && matchedCount > 0 && matchedCount < doctorList.length;
   renderSpecialists(specialists);
   wireSearch();
 
