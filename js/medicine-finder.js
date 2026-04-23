@@ -9,6 +9,146 @@ const input      = document.getElementById('medicineInput');
 const searchBtn  = document.getElementById('searchBtn');
 const resultsEl  = document.getElementById('medicineResults');
 
+// ─── Camera & image scan ───────────────────────────────────────────────────
+const openCameraBtn  = document.getElementById('openCameraBtn');
+const uploadImageBtn = document.getElementById('uploadImageBtn');
+const imageFileInput = document.getElementById('imageFileInput');
+const scanPreview    = document.getElementById('scanPreview');
+const scanPreviewImg = document.getElementById('scanPreviewImg');
+const scanOverlay    = document.getElementById('scanOverlay');
+const clearScanBtn   = document.getElementById('clearScanBtn');
+
+// Upload image
+uploadImageBtn.addEventListener('click', () => imageFileInput.click());
+imageFileInput.addEventListener('change', () => {
+  const file = imageFileInput.files[0];
+  if (file) processImageFile(file);
+  imageFileInput.value = '';
+});
+
+// Camera
+openCameraBtn.addEventListener('click', async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    const modal  = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;display:flex;align-items:center;justify-content:center;padding:1rem';
+    modal.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:1.25rem;max-width:440px;width:100%">
+        <p style="font-weight:700;font-size:1rem;margin-bottom:0.75rem;color:#111827">Point camera at medicine packaging</p>
+        <video autoplay playsinline style="width:100%;border-radius:10px;background:#000;display:block;max-height:300px;object-fit:cover"></video>
+        <p style="font-size:0.75rem;color:#6B7280;margin:0.5rem 0 0.875rem;text-align:center">Make sure the medicine name is clearly visible</p>
+        <div style="display:flex;gap:0.75rem;justify-content:center">
+          <button class="btn btn-primary" id="captureBtn" type="button">📸 Capture</button>
+          <button class="btn btn-ghost" id="closeCamBtn" type="button">Cancel</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    const video = modal.querySelector('video');
+    video.srcObject = stream;
+
+    modal.querySelector('#closeCamBtn').addEventListener('click', () => {
+      stream.getTracks().forEach(t => t.stop());
+      modal.remove();
+    });
+
+    modal.querySelector('#captureBtn').addEventListener('click', () => {
+      const canvas = document.createElement('canvas');
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      stream.getTracks().forEach(t => t.stop());
+      modal.remove();
+      canvas.toBlob(blob => {
+        processImageFile(new File([blob], 'capture.jpg', { type: 'image/jpeg' }));
+      }, 'image/jpeg', 0.92);
+    });
+  } catch {
+    alert('Could not access camera. Please check permissions or use "Upload Image" instead.');
+  }
+});
+
+// Clear scan
+clearScanBtn.addEventListener('click', () => {
+  scanPreview.hidden = true;
+  scanPreviewImg.src = '';
+});
+
+// Process image — show preview then OCR
+async function processImageFile(file) {
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const dataUrl = e.target.result;
+    scanPreviewImg.src = dataUrl;
+    scanPreview.hidden = false;
+    scanOverlay.hidden = false;
+
+    try {
+      const base64 = dataUrl.split(',')[1];
+      const medicineName = await ocrMedicineName(base64, file.type);
+      scanOverlay.hidden = true;
+
+      if (medicineName) {
+        input.value = medicineName;
+        // Scroll to results and search
+        resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        await search();
+      } else {
+        showError('Could not read a medicine name from the image. Please try a clearer photo or type the name manually.');
+      }
+    } catch (err) {
+      scanOverlay.hidden = true;
+      showError('Scan failed: ' + err.message);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// OCR via Groq vision
+async function ocrMedicineName(base64, mimeType) {
+  const key = CONFIG.GROQ_API_KEY;
+  if (!key) throw new Error('No API key configured.');
+
+  const mime    = mimeType || 'image/jpeg';
+  const dataUrl = `data:${mime};base64,${base64}`;
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${key}`
+    },
+    body: JSON.stringify({
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: `Look at this medicine packaging image. Extract ONLY the primary medicine/brand name printed on it.
+Return ONLY a JSON object: { "medicineName": "extracted name here" }
+If you cannot find a medicine name, return: { "medicineName": null }
+Do not include dosage numbers, manufacturer names, or extra text — just the medicine name.`
+          },
+          { type: 'image_url', image_url: { url: dataUrl } }
+        ]
+      }],
+      temperature: 0.1,
+      max_tokens: 64,
+      response_format: { type: 'json_object' }
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `API error ${res.status}`);
+  }
+
+  const data = await res.json();
+  const raw  = data.choices?.[0]?.message?.content;
+  const parsed = JSON.parse(raw || '{}');
+  return parsed.medicineName || null;
+}
+
 // ─── Quick-search chips ────────────────────────────────────────────────────
 document.querySelectorAll('.medicine-chip').forEach(chip => {
   chip.addEventListener('click', () => {
