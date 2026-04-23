@@ -51,24 +51,26 @@ Return ONLY a valid JSON object (no markdown):
   "genericName": "the INN/generic name of the active ingredient",
   "activeIngredient": "active ingredient with strength e.g. Paracetamol 500mg",
   "drugClass": "drug class e.g. Analgesic / Antipyretic",
+  "dosageForm": "e.g. Tablet, Capsule, Syrup, Suspension, Injection, Cream, Drops, Inhaler",
   "uses": ["use 1", "use 2", "use 3"],
-  "dosage": "standard adult dosage",
+  "dosage": "standard adult dosage with correct unit for the form (e.g. 5ml for syrup, 1 tablet, 2 puffs)",
   "sideEffects": ["side effect 1", "side effect 2", "side effect 3"],
   "warnings": ["warning 1", "warning 2"],
   "genericAlternatives": [
     {
       "name": "generic brand name",
       "manufacturer": "manufacturer name",
-      "estimatedPrice": "price range in BDT e.g. ৳2–5 per tablet"
+      "estimatedPrice": "approximate price in BDT with correct unit for the form e.g. ৳40–60 per 100ml bottle for syrup, ৳2–5 per tablet, ৳15–25 per vial for injection (may vary)"
     }
   ],
-  "savingsNote": "brief note on how much cheaper generics are vs brand",
+  "savingsNote": "brief note on how much cheaper generics typically are vs brand name",
   "requiresPrescription": true or false,
   "notFound": false
 }
 
 If the medicine is completely unknown, return { "notFound": true, "brandName": "${medicineName}" }.
-Focus on medicines available in Bangladesh. Include 3-5 generic alternatives if available.`;
+Focus on medicines available in Bangladesh. Include 3-5 generic alternatives if available.
+Use the correct dosage form and pricing unit — do NOT assume tablet if it is a syrup, injection, cream, or other form.`;
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -121,6 +123,7 @@ function renderResult(data, query) {
           </div>
           <div class="medicine-overview__badges">
             <span class="badge badge-info">${escHtml(data.drugClass)}</span>
+            ${data.dosageForm ? `<span class="badge badge-neutral">${escHtml(data.dosageForm)}</span>` : ''}
             ${data.requiresPrescription
               ? '<span class="badge badge-elevated">Rx Required</span>'
               : '<span class="badge badge-normal">OTC</span>'}
@@ -213,6 +216,9 @@ function renderResult(data, query) {
                 <p class="medicine-alt-card__price">${escHtml(alt.estimatedPrice)}</p>
               </div>`).join('')}
           </div>
+          <p style="font-size:0.75rem;color:var(--color-muted);margin-top:0.875rem">
+            ⚠️ Prices are AI-estimated based on general market knowledge and may not reflect current pharmacy prices. Always verify with your local pharmacist.
+          </p>
         </div>` : ''}
 
     </div>`;
