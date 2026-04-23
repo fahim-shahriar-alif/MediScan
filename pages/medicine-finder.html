@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generic Medicine Finder — MediScan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/medicine-finder.css" />
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="navbar__inner">
+        <a href="../index.html" class="navbar__logo" aria-label="MediScan home">
+          <img src="../assets/logo.svg" alt="MediScan" class="navbar__logo-img" />
+        </a>
+        <ul class="navbar__nav" role="list">
+          <li><a href="health-history.html">Health History</a></li>
+          <li><a href="specialists.html">Find Specialists</a></li>
+          <li><a href="symptoms.html">AI Health Check</a></li>
+          <li><a href="medicine-finder.html" class="active">Medicine Finder</a></li>
+        </ul>
+        <div id="navbar__user-slot"></div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="medicine-page">
+    <div class="container">
+
+      <!-- Page Header -->
+      <div class="medicine-header">
+        <div class="medicine-header__icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="medicine-header__title">Generic Medicine Finder</h1>
+          <p class="medicine-header__subtitle">Find affordable generic alternatives to brand-name medicines</p>
+        </div>
+      </div>
+
+      <!-- Search Card -->
+      <div class="card medicine-search-card">
+        <div class="medicine-search-wrap">
+          <div class="medicine-search-input-wrap">
+            <svg class="medicine-search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text" id="medicineInput" class="medicine-search-input"
+              placeholder="Enter medicine name (e.g. Napa, Amoxil, Losartan)…" autocomplete="off" autocorrect="off" />
+          </div>
+          <button class="btn btn-primary medicine-search-btn" id="searchBtn" type="button">
+            Find Generic
+          </button>
+        </div>
+        <div class="medicine-chips">
+          <span class="medicine-chip__label">Try:</span>
+          <button class="medicine-chip" type="button" data-name="Napa">Napa</button>
+          <button class="medicine-chip" type="button" data-name="Amoxil">Amoxil</button>
+          <button class="medicine-chip" type="button" data-name="Losartan">Losartan</button>
+          <button class="medicine-chip" type="button" data-name="Metformin">Metformin</button>
+          <button class="medicine-chip" type="button" data-name="Omeprazole">Omeprazole</button>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="medicineResults"></div>
+
+      <!-- Disclaimer -->
+      <div class="alert alert-warning medicine-disclaimer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        <p>This tool provides general information only. Always consult a pharmacist or doctor before switching
+          medicines.</p>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script src="../js/nav.js" type="module"></script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    requireAuth();
+  </script>
+  <script src="../js/medicine-finder.js" type="module"></script>
+
+</body>
+
+</html>
