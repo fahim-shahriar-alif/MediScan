@@ -108,7 +108,7 @@
         if (!user) return;
 
         // Only save if not already saved (check flag)
-        const alreadySaved = loadData('appointmentSaved_' + confNum);
+        const alreadySaved = localStorage.getItem('appointmentSaved_' + confNum);
         if (alreadySaved) return;
 
         await saveAppointment({
