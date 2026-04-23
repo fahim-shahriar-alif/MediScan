@@ -23,7 +23,7 @@ async function getDb() {
 
 async function analyzeImageWithGroq(base64Image, mimeType) {
   const key   = CONFIG.GROQ_API_KEY;
-  const model = 'meta-llama/llama-4-maverick-17b-128e-instruct';
+  const model = 'meta-llama/llama-4-scout-17b-16e-instruct';
   const mime  = mimeType || 'image/jpeg';
   const dataUrl = base64Image.startsWith('data:')
     ? base64Image
@@ -117,112 +117,8 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no extra
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function analyzeImageWithGemini(base64Image, mimeType) {
-  // Try Groq first, fall back to Gemini on failure
-  if (CONFIG.GROQ_API_KEY) {
-    try {
-      return await analyzeImageWithGroq(base64Image, mimeType);
-    } catch (groqErr) {
-      console.warn('⚠️ Groq failed, falling back to Gemini:', groqErr.message);
-    }
-  }
-
-  const key   = CONFIG.GOOGLE_GEMINI_API_KEY;
-  const model = CONFIG.GOOGLE_GEMINI_MODEL || 'gemini-1.5-flash';
-
-  if (!key) throw new Error('GOOGLE_GEMINI_API_KEY not set in config.js');
-
-  const prompt = `You are an expert medical AI. Carefully read this medical report image and extract all test results.
-
-Return ONLY a valid JSON object with this exact structure (no markdown, no extra text):
-{
-  "summary": "2-3 sentence plain-language summary of the patient's overall health",
-  "status": "e.g. Pre-Diabetic Range / All Normal / Elevated Markers / Critical",
-  "statusBadge": "badge-normal OR badge-elevated OR badge-prediab OR badge-severe",
-  "confidenceScore": 85,
-  "metrics": [
-    {
-      "name": "exact test name from report",
-      "value": "numeric value as string",
-      "unit": "unit e.g. U/L, mg/dL, %",
-      "status": "Normal OR Elevated OR Low OR High OR Critical",
-      "badge": "badge-normal OR badge-elevated OR badge-severe",
-      "normalRange": "reference range from report e.g. <45",
-      "percent": 50
-    }
-  ],
-  "otherResults": [
-    {
-      "name": "test name",
-      "value": "value with unit",
-      "badge": "badge-normal OR badge-elevated OR badge-severe",
-      "status": "Normal OR Elevated OR Low OR High OR Critical"
-    }
-  ],
-  "diseases": [
-    {
-      "name": "potential condition name",
-      "likelihood": "Low OR Medium OR High",
-      "description": "brief 1-2 sentence explanation based on the test results",
-      "urgency": "Monitor OR Consult Doctor OR Urgent"
-    }
-  ],
-  "nextSteps": "specific actionable recommendations based on the actual results",
-  "specialistType": "type of specialist to consult"
-}
-
-Rules:
-- Extract REAL values from the image, do not make up numbers
-- For the percent field: calculate how far the value is into the abnormal range (0=normal, 100=severely abnormal)
-- If a value is critically abnormal (like SGPT 2201 U/L when normal is <45), set badge to badge-severe
-- List diseases/conditions that these results suggest`;
-
-  console.log('🤖 Calling Gemini with image...');
-
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: prompt },
-            { inline_data: { mime_type: mimeType || 'image/jpeg', data: base64Image } }
-          ]
-        }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 2048,
-          responseMimeType: 'application/json'
-        },
-        safetySettings: [
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' }
-        ]
-      })
-    }
-  );
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    console.error('❌ Gemini API error:', err);
-    throw new Error(`Gemini API ${res.status}: ${err?.error?.message || 'Unknown error'}`);
-  }
-
-  const data = await res.json();
-  console.log('✅ Gemini raw response:', data);
-
-  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!raw) throw new Error('Gemini returned empty response');
-
-  // Parse JSON — handle both raw and markdown-fenced
-  try {
-    return JSON.parse(raw);
-  } catch {
-    const match = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (match) return JSON.parse(match[1]);
-    throw new Error('Could not parse Gemini response as JSON');
-  }
+  // Groq only — no Gemini fallback
+  return await analyzeImageWithGroq(base64Image, mimeType);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -232,8 +128,8 @@ Rules:
 export async function analyzeReport(base64Image, mimeType) {
   console.log('🏥 MediScan: Starting report analysis...');
 
-  if (!CONFIG.GROQ_API_KEY && !CONFIG.GOOGLE_GEMINI_API_KEY) {
-    throw new Error('No API key configured. Please add a Groq or Gemini API key to config.js.');
+  if (!CONFIG.GROQ_API_KEY) {
+    throw new Error('No Groq API key configured. Please add GROQ_API_KEY to your environment variables.');
   }
 
   try {
