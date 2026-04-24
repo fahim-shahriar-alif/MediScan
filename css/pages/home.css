@@ -215,15 +215,26 @@
 .feature-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
   gap: 0.75rem;
-  padding: 0;
+  padding: 2rem 1.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.feature-item:hover {
+  box-shadow: var(--shadow-modal);
+  transform: translateY(-2px);
 }
 
 .feature-item__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -232,8 +243,8 @@
 }
 
 .feature-item__icon svg {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
 }
 
 /* Icon color variants matching Figma */
