@@ -1,2 +1,0 @@
-# Software Requirements Specification — MediScan
-

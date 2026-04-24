@@ -5,3 +5,6 @@ config.js
 MD/
 server/.env
 server/node_modules/
+ProjectReport.md
+ProjectReportLatex.md
+SRS.md
