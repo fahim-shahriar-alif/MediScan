@@ -169,4 +169,9 @@ button {
   .container {
     padding: 0 1rem;
   }
+
+  /* Prevent chat bubble from overlapping page content */
+  main {
+    padding-bottom: 5rem;
+  }
 }

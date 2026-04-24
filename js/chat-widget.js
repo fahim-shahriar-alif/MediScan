@@ -57,6 +57,7 @@
   const style = document.createElement('style');
   style.textContent = `
 #chatWidget{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;font-family:'Inter',sans-serif}
+@media(max-width:768px){#chatWidget{bottom:1rem;right:1rem}}
 .chat-bubble{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#1D4ED8);border:none;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(37,99,235,.4);transition:transform .2s,box-shadow .2s;position:relative}
 .chat-bubble:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(37,99,235,.5)}
 .chat-bubble__icon--close{display:none}
