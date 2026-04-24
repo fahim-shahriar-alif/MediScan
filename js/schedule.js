@@ -21,6 +21,13 @@ if (doctor) {
   document.getElementById('mapDistance').textContent  = doctor.distance  ? doctor.distance + ' away' : '—';
   document.getElementById('mapPhone').textContent     = doctor.phone     || '—';
 
+  // Wire Get Directions button
+  const directionsBtn = document.getElementById('directionsBtn');
+  if (directionsBtn && doctor.address) {
+    const query = encodeURIComponent(doctor.address + ', Bangladesh');
+    directionsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
+  }
+
   // Star rating
   const stars = '★'.repeat(Math.floor(doctor.rating)) + (doctor.rating % 1 >= 0.5 ? '½' : '');
   document.getElementById('docRating').innerHTML =
