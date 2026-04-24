@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="../css/components.css" />
   <link rel="stylesheet" href="../css/pages/schedule.css" />
   <link rel="stylesheet" href="../css/pages/appointment.css" />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 
 <body>
@@ -27,7 +29,7 @@
           <li><a href="specialists.html">Find Specialists</a></li>
           <li><a href="symptoms.html">AI Health Check</a></li>
           <li><a href="medicine-finder.html">Medicine Finder</a></li>
-          
+
         </ul>
         <div id="navbar__user-slot"></div>
       </div>
@@ -234,9 +236,8 @@
             </h3>
 
             <div class="clinic-map">
-              <!-- OpenStreetMap static tile -->
-              <img class="clinic-map__img" id="mapImg" src="https://tile.openstreetmap.org/13/4096/2730.png"
-                alt="Clinic location map" />
+              <!-- Leaflet interactive map -->
+              <div id="leafletMap" class="clinic-map__leaflet"></div>
               <div class="clinic-map__overlay">
                 <p class="clinic-map__address" id="mapAddress">—</p>
                 <div class="clinic-map__meta">
@@ -284,10 +285,11 @@
   </main>
 
   <script src="../config.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="../js/nav.js" type="module"></script>
   <script src="../js/chat-widget.js" type="module"></script>
   <script type="module">
-    // ── Auth guard — must be logged in to book ──────────────────────────────
     import { requireAuth } from '../js/auth.js';
     requireAuth();
   </script>

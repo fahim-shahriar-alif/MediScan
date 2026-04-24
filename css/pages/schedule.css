@@ -407,16 +407,28 @@
 .clinic-map {
   border-radius: var(--radius-md);
   overflow: hidden;
-  position: relative;
   border: 1px solid var(--color-border);
 }
 
-.clinic-map__img {
+/* Leaflet interactive map container */
+.clinic-map__leaflet {
   width: 100%;
-  height: 160px;
-  object-fit: cover;
+  height: 200px;
+  z-index: 0;
+}
+
+/* Override Leaflet popup styles to match design */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.8125rem !important;
+}
+
+.leaflet-popup-content strong {
+  color: var(--color-primary);
   display: block;
-  filter: saturate(0.8);
+  margin-bottom: 0.125rem;
 }
 
 .clinic-map__overlay {

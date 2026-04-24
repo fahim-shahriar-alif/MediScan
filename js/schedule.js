@@ -27,10 +27,82 @@ if (doctor) {
     `<span class="sched-stars">${stars}</span>
      <span class="sched-rating-val">${doctor.rating}</span>
      <span class="sched-rating-count">(${doctor.reviews} reviews)</span>`;
+
+  // ── Leaflet map — geocode the doctor's address ──────────────────────────
+  initMap(doctor.address, doctor.name);
+
 } else {
   document.getElementById('docName').textContent      = 'No doctor selected';
   document.getElementById('docSpecialty').textContent = 'Please go back and select a specialist';
   document.getElementById('reviewBtn').disabled       = true;
+  // Show default Dhaka map
+  initMap('Dhaka, Bangladesh', 'Clinic');
+}
+
+// ─── Leaflet map initializer ───────────────────────────────────────────────
+async function initMap(address, label) {
+  const mapEl = document.getElementById('leafletMap');
+  if (!mapEl || typeof L === 'undefined') return;
+
+  // Default to Dhaka center while geocoding
+  const defaultLat = 23.8103, defaultLng = 90.4125;
+
+  const map = L.map('leafletMap', {
+    zoomControl: true,
+    scrollWheelZoom: false,
+    attributionControl: true,
+  }).setView([defaultLat, defaultLng], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+  }).addTo(map);
+
+  // Custom marker icon
+  const markerIcon = L.divIcon({
+    html: `<div style="
+      width:32px;height:32px;background:#2563EB;border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);border:3px solid #fff;
+      box-shadow:0 2px 8px rgba(37,99,235,0.5)">
+    </div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    className: '',
+  });
+
+  // Geocode address using Nominatim (free OpenStreetMap geocoder)
+  if (address && address !== '—') {
+    try {
+      const query = encodeURIComponent(address + ', Bangladesh');
+      const res   = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
+        { headers: { 'Accept-Language': 'en', 'User-Agent': 'MediScan/1.0' } }
+      );
+      const data = await res.json();
+
+      if (data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lng = parseFloat(data[0].lon);
+        map.setView([lat, lng], 15);
+        L.marker([lat, lng], { icon: markerIcon })
+          .addTo(map)
+          .bindPopup(`<strong>${label}</strong><br>${address}`)
+          .openPopup();
+      } else {
+        // Geocoding failed — show Dhaka with a note
+        L.marker([defaultLat, defaultLng], { icon: markerIcon })
+          .addTo(map)
+          .bindPopup(`<strong>${label}</strong><br>${address}`)
+          .openPopup();
+      }
+    } catch {
+      // Network error — map still shows, just without precise location
+      L.marker([defaultLat, defaultLng], { icon: markerIcon })
+        .addTo(map)
+        .bindPopup(`<strong>${label}</strong><br>${address}`)
+        .openPopup();
+    }
+  }
 }
 
 // ─── State ─────────────────────────────────────────────────────────────────
