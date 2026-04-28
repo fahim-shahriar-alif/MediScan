@@ -132,13 +132,25 @@ function buildSpecialistList(doctorList, aiRec) {
 
   // Annotate each doctor
   list = list.map(doc => {
-    const docSpecialty = doc.specialty.toLowerCase();
+    const docSpecialty = doc.specialty.toLowerCase().trim();
+
+    // Use word-boundary matching to avoid "urologist" matching inside "neurologist"
+    const specialtyMatch = (a, b) => {
+      // Exact match
+      if (a === b) return true;
+      // a starts with b or b starts with a (e.g. "gastro" vs "gastroenterologist")
+      if (a.startsWith(b) || b.startsWith(a)) return true;
+      // Word-level: split on spaces and check if any word matches
+      const aWords = a.split(/\s+/);
+      const bWords = b.split(/\s+/);
+      return aWords.some(aw => bWords.some(bw => aw === bw && aw.length > 4));
+    };
+
     const matchedSpec = aiRec.specialists.find(s =>
-      docSpecialty.includes(s.specialty.toLowerCase()) ||
-      s.specialty.toLowerCase().includes(docSpecialty)
+      specialtyMatch(docSpecialty, s.specialty.toLowerCase().trim())
     );
     const isPrimary = recommendedSpecialties.some(s =>
-      docSpecialty.includes(s) || s.includes(docSpecialty)
+      specialtyMatch(docSpecialty, s.trim())
     );
 
     return {
